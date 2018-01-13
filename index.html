@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>METAR</title>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="scripts.js"></script>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Logo goes here...</h1>
+        <input type="text" class="metarText" placeholder="Enter METAR Text to Decode" />
+      </header>
+
+      <section class="results">
+        <table>
+          <tr>
+            <td>Test</td><td>Test</td>
+          </tr>
+        </table>
+      </section>
+    </div>
+
+    <script>
+      const inputBox = document.querySelector(".metarText")
+      inputBox.addEventListener("keyup", decode_metar)
+    </script>
+
+  </body>
+</html>
