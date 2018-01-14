@@ -1,7 +1,12 @@
 function decode_metar(e) {
+
+  console.clear()
+
+
+
   const metar = this.value.split("=")[0].split("RMK")
 
-  const mainMetarText = metar[0]
+  let mainMetarText = metar[0]
   const remarks = metar[1] || null
 
   let parsedMetar = [
@@ -19,7 +24,7 @@ function decode_metar(e) {
       },
       {
         name: "Date",
-        pattern: /\(d{6}Z)( AUTO)?( [A-Z]{2}[A-Z])?/,
+        pattern: /a/,   ///\(d{6}Z)( AUTO)?( [A-Z]{2}[A-Z])?/,
         meanings: {1: "Update Time", 2: "Automatic Station Indicator", 3: "Correction Indicator"},
         match: null
       },
@@ -50,42 +55,81 @@ function decode_metar(e) {
       },
       {
         name: "Weather Description",
-        pattern: /(-|+|VC)?(MI|BC|PR|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)?(BR|FG|FU|VA|DU|SA|HZ)?(PO|SQ|+?FC|+?SS|+?DS)?/,
+        pattern: /(-|\+|VC)?(MI|BC|PR|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)?(BR|FG|FU|VA|DU|SA|HZ)?(PO|SQ|\+?FC|\+?SS|\+?DS)?/,
         meanings: {1: "Intensity", 2: "Descriptor", 3: "Precipitation", 4: "Obscuration", 5: "Other"},
         match: null
       },
       {
         name: "Clouds",
-        pattern: /(SKC|FEW|SCT|BKN|OVC|VV)\d{3}/,
-        meanings: {},
+        pattern: /(CAVOK)|(( ?(SKC|FEW|SCT|BKN|OVC|VV)(\d{3}))*)/,
+        meanings: {1: "Ceiling and Visibility OK", 2: "Clouds"},
         match: null
       },
+      {
+        name: "Vertical Visibility",
+        pattern: /VV(\d{3})/,
+        meanings: {1: "Vertical Visibility"},
+        match: null
+      },
+
       {
         name: "Temperature",
-        pattern: /M?\d{1,2}\/M?\d{1,2}/,
-        meanings: {},
+        pattern: /(M?\d{1,2})\/(M?\d{1,2})/,
+        meanings: {1: "Temperature", 2: "Dew Point"},
         match: null
       },
       {
-        name: "Pressure",
-        pattern: /[AQ]\d{4}/,
-        meanings: {},
-        match: null},
+        name: "Altimeter Setting",
+        pattern: /[AQ](\d{4})/,
+        meanings: {1: "Altimeter"},
+        match: null
+      },
+      {
+        name: "Recent Weather",
+        pattern: /RE(MI|BC|PR|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ)?/,
+        meanings: {1: "Descriptor", 2: "Weather Phenomenon"},
+        match: null
+      },
       {
         name: "Windshear",
         pattern: /WS ((RWY\d{2})|(ALLRWY))/,
-        meanings: {},
+        meanings: {1: "Runway Affected"},
         match: null
       }
   ]
-//pass match to glossary, if it returns use that
-  console.clear()
 
+  //Parse metar and try to match
   for (let metar in parsedMetar) {
+    //Try to match
+    let matchCandidate = mainMetarText.match(parsedMetar[metar].pattern)
+    //If this pattern matches
+    if (matchCandidate === null) continue
+
     console.log("\n")
     console.log(parsedMetar[metar].pattern)
-    console.log(mainMetarText.match(parsedMetar[metar].pattern))
+    console.log(matchCandidate)
+    //Loop through for meanings
+    let x = matchCandidate.reduce((acc, val, idx) => {
+      console.log("\t\t" + parsedMetar[metar].meanings[idx])
+      return val ? `${val} ${parsedMetar[metar].meanings[idx]}` : ""
+    }, "")
+
+    console.log(`### - ${parsedMetar[metar].name}` + x)
+
+
+    //remove match from Text
+    mainMetarText = mainMetarText.replace(parsedMetar[metar].pattern, "")
+
+    //
+    // console.log(mainMetarText.match(parsedMetar[metar].pattern))
+    // for (let i = 1; i < mainMetarText.match(parsedMetar[metar].pattern).length; i++) {
+    //   console.log(mainMetarText.match(parsedMetar[metar].pattern)[i])
+    // }
+
+//    mainMetarText = mainMetarText.replace(, "")
+    //console.log()
   }
+
 
 }
 
