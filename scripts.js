@@ -5,19 +5,80 @@ function decode_metar(e) {
   const remarks = metar[1] || null
 
   let parsedMetar = [
-      {name: "Metar Type", pattern: /METAR|SPECI/, match: null},                                          //DONE
-      {name: "Airport Code", pattern: /([A-Z]{4})( AUTO)?( [A-Z]{3})?/, match: null},
-      {name: "Date", pattern: /\d{6}Z/, match: null},
-      {name: "Wind", pattern: /(\d{3}\d{1,2}G\d{1,2}KT)/, match: null},
-      {name: "Visibility", pattern: /(\d{1,2}\/?\d{1,2}SM)/, match: null},
-      {name: "Runway Visibility", pattern: /R\d{2}\/\d{4}FT(\/[DUN])?/, match: null},
-      {name: "Weather Description", pattern: /([-+]?(MI|BC|PR|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP))/, match: null},
-      {name: "Clouds", pattern: /(SKC|FEW|SCT|BKN|OVC|VV)\d{3}/, match: null},
-      {name: "Temperature", pattern: /M?\d{1,2}\/M?\d{1,2}/, match: null},
-      {name: "Pressure", pattern: /[AQ]\d{4}/, match: null},
-      {name: "Windshear", pattern: /WS ((RWY\d{2})|(ALLRWY))/, match: null},
-  ]
+      {
+        name: "Metar Type",
+        pattern: /(METAR)|(SPECI)/,
+        meanings: {1: "METAR", 2: "SPECIAL"},
+        match: null
+      },
+      {
+        name: "Airport Code",
+        pattern: /[A-Z]{3,4}/,
+        meanings: {1: "Airport Code"},
+        match: null
+      },
+      {
+        name: "Date",
+        pattern: /\(d{6}Z)( AUTO)?( [A-Z]{2}[A-Z])?/,
+        meanings: {1: "Update Time", 2: "Automatic Station Indicator", 3: "Correction Indicator"},
+        match: null
+      },
+      {
+        name: "Wind",
+        pattern: /(\d{3})|(VRB)(\d{1,2})G?(\d{1,2})KT/,
+        meanings: {1: "Wind Direction", 2: "Variable", 3: "Wind Speed", 4: "Gust"},
+        match: null
+      },
+      {
+        name: "Wind Variability",
+        pattern: /(\d{3})V(\d{3})/,
+        meanings: {1: "Wind Direction", 2: "Variable Wind Direction"},
+        match: null
+      },
 
+      {
+        name: "Prevailing Visibility",
+        pattern: /\d{1,2}?\/?\d{1,2}SM/,
+        meanings: {1: "Visibility (SM)"},
+        match: null
+      },
+      {
+        name: "Runway Visibility",
+        pattern: /(R\d{1,2}[CLR]?)\/(\d{4})FT(\/([DUN]))?/,
+        meanings: {1: "Runway", 2: "Visual Range", 3: "Trending"},
+        match: null
+      },
+      {
+        name: "Weather Description",
+        pattern: /(-|+|VC)?(MI|BC|PR|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)?(BR|FG|FU|VA|DU|SA|HZ)?(PO|SQ|+?FC|+?SS|+?DS)?/,
+        meanings: {1: "Intensity", 2: "Descriptor", 3: "Precipitation", 4: "Obscuration", 5: "Other"},
+        match: null
+      },
+      {
+        name: "Clouds",
+        pattern: /(SKC|FEW|SCT|BKN|OVC|VV)\d{3}/,
+        meanings: {},
+        match: null
+      },
+      {
+        name: "Temperature",
+        pattern: /M?\d{1,2}\/M?\d{1,2}/,
+        meanings: {},
+        match: null
+      },
+      {
+        name: "Pressure",
+        pattern: /[AQ]\d{4}/,
+        meanings: {},
+        match: null},
+      {
+        name: "Windshear",
+        pattern: /WS ((RWY\d{2})|(ALLRWY))/,
+        meanings: {},
+        match: null
+      }
+  ]
+//pass match to glossary, if it returns use that
   console.clear()
 
   for (let metar in parsedMetar) {
@@ -27,6 +88,10 @@ function decode_metar(e) {
   }
 
 }
+
+//REMARKS
+//VSBY N 3    == Visibility north 3 miles
+//TORNADO     == tornado
 
 
 //
