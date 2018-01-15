@@ -14,88 +14,89 @@ function decode_metar(e) {
         name: "Metar Type",
         pattern: /(METAR)|(SPECI)/g,
         meanings: {0: "METAR", 1: "SPECIAL"},
-        match: ""
+        match: []
       },
       {
         name: "Airport Code",
-        pattern: /([A-Z]{3,4})?/g,
-        meanings: {0: "Airport Code"},
-        match: ""
+        pattern: /([A-Z]{3,4})/g,
+        meanings: {0: ""},
+        match: []
       },
       {
         name: "Date",
         pattern: /(\d{6}Z)( AUTO)?( [A-Z]{2}([A-Z]))?/,
         meanings: {0: "Update Time", 1: "Automatic Station Indicator", 2: "Correction Indicator"},
-        match: ""
+        match: []
       },
       {
         name: "Wind",
         pattern: /(\d{3}|VRB)(\d{1,2})G?(\d{1,2})KT/g,   //((\d{3})|(VRB))(\d{1,2})G?(\d{1,2})KT/g,
-        meanings: {0: "Wind Direction", 1: "Variable", 3: "Wind Speed", 4: "Gust"},
-        match: ""
+        meanings: {0: "Wind Direction", 1: "Variable", 2: "Wind Speed", 3: "Gust"},
+        match: []
       },
       {
         name: "Wind Variability",
         pattern: /(\d{3})V(\d{3})/g,
         meanings: {1: "Wind Direction", 2: "Variable Wind Direction"},
-        match: ""
+        match: []
       },
       {
         name: "Prevailing Visibility",
         pattern: /(\d{1,2})?\/?(\d{1,2})SM/g,
-        meanings: {1: "Visibility (SM)"},
-        match: ""
+        meanings: {1: "Visibility (SM)", 2: "Visibility (SM)"},
+        match: []
       },
       {
         name: "Runway Visibility",
         pattern: /(R\d{1,2}[CLR]?)\/(\d{4})FT(\/([DUN]))?/g,
         meanings: {1: "Runway", 2: "Visual Range", 3: "Trending"},
-        match: ""
+        match: []
       },
       {
         name: "Weather Description",
         pattern: /(-|\+|VC)?(MI|BC|PR|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)?(BR|FG|FU|VA|DU|SA|HZ)?(PO|SQ|\+?FC|\+?SS|\+?DS)?/g,
         meanings: {1: "Intensity", 2: "Descriptor", 3: "Precipitation", 4: "Obscuration", 5: "Other"},
-        match: ""
+        match: []
       },
       {
         name: "Clouds",
         pattern: /(CAVOK)|(( ?(SKC|FEW|SCT|BKN|OVC|VV)(\d{3}))*)/g,
         meanings: {1: "Ceiling and Visibility OK", 2: "Clouds"},
-        match: ""
+        match: []
       },
       {
         name: "Vertical Visibility",
         pattern: /VV(\d{3})/g,
         meanings: {1: "Vertical Visibility"},
-        match: ""
+        match: []
       },
       {
         name: "Temperature",
         pattern: /(M?\d{1,2})\/(M?\d{1,2})/g,
         meanings: {1: "Temperature", 2: "Dew Point"},
-        match: ""
+        match: []
       },
       {
         name: "Altimeter Setting",
         pattern: /[AQ](\d{4})/g,
         meanings: {1: "Altimeter"},
-        match: ""
+        match: []
       },
       {
         name: "Recent Weather",
         pattern: /RE(MI|BC|PR|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ)?/g,
         meanings: {1: "Descriptor", 2: "Weather Phenomenon"},
-        match: ""
+        match: []
       },
       {
         name: "Windshear",
         pattern: /WS ((RWY\d{2})|(ALLRWY))/g,
         meanings: {1: "Runway Affected"},
-        match: ""
+        match: []
       }
   ]
 
+  let prevIndex = 0
   //Parse metar and try to match
   for (let metar in parsedMetar) {
     let regex = parsedMetar[metar].pattern
@@ -103,71 +104,23 @@ function decode_metar(e) {
     console.log(regex)
 
     //Find first instance of regex - we only care for the first one
-    m = regex.exec(mainMetarText)
-        // This is necessary to avoid infinite loops with zero-width matches
-        // if (m.index === regex.lastIndex) {
-        //     regex.lastIndex++;
-        // }
-        //see whether to write
-        //write =
+    m = regex.exec(mainMetarText.slice(prevIndex))
+    console.log(m)
     if (m && m.some(val => val !== undefined && val !== "")) {
+        prevIndex = m.index + m[0].length
+
         m = m.splice(1)
-        console.log(m)
         //write props
-        // for (let item in m) {
-        //   // console.log(m[item + 1])
-        //   if (m[item] !== undefined && m[item] !== "") {
-        //     parsedMetar[metar]["match"] += `${parsedMetar[metar]["meanings"][item - 1]} - ${item - 1} ${m[item]} `
-        //   }
-        // }
-    } //console.log(m)
-        // The result can be accessed through the `m`-variable.
-        // m.forEach((match, groupIndex) => {
-        //     if (match !== undefined && match !== "") {
-        //       console.log(`Found match, group ${groupIndex}: ${match}`);
-        //     }
-        // });
-    //}
+        for (let item in m) {
+          if (m[item] !== undefined && m[item] !== "") {
+            parsedMetar[metar]["match"].push({
+              item: m[item],
+              data: parsedMetar[metar]["meanings"][item]
+            })
+          }
+        }
 
-
-    // //Try to match
-    // let matchCandidate = mainMetarText.match(parsedMetar[metar].pattern)
-    // //If this pattern matches
-    // if (matchCandidate === null) continue
-    //
-    // console.log("\n")
-    // console.log(parsedMetar[metar].pattern)
-    // console.log(matchCandidate)
-    // //Loop through for meanings
-    // for (let i = 0; i < matchCandidate.length; i++) {
-    //   if (matchCandidate[i] === undefined || matchCandidate[i] === "") continue
-    //   //console.log(matchCandidate[i])
-    //   console.log(`${i}  -  ${matchCandidate[i]} ${parsedMetar[metar].meanings[i + 1]}`)
-    // }
-
-
-    // let x = .splice(1)
-    //
-    // .reduce((acc, val, idx) => {
-    //   //console.log("\t\t" + idx + '   ' + parsedMetar[metar].meanings[idx + 1])
-    //   console.log(`${val} ${parsedMetar[metar].meanings[idx + 1]}`)
-    //   return val == undefined ?  : ""
-    // }, "")
-    //
-    // console.log(`### - ${parsedMetar[metar].name}` + x)
-
-
-    //remove match from Text
-  //  mainMetarText = mainMetarText.replace(parsedMetar[metar].pattern, "")
-
-    //
-    // console.log(mainMetarText.match(parsedMetar[metar].pattern))
-    // for (let i = 1; i < mainMetarText.match(parsedMetar[metar].pattern).length; i++) {
-    //   console.log(mainMetarText.match(parsedMetar[metar].pattern)[i])
-    // }
-
-    // mainMetarText = mainMetarText.replace(, "")
-    //console.log()
+    }
   }
 
   console.log(parsedMetar)
