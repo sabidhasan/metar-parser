@@ -13,25 +13,25 @@ function decode_metar(e) {
       {
         name: "Metar Type",
         pattern: /(METAR)|(SPECI)/g,
-        meanings: {1: "METAR", 2: "SPECIAL"},
+        meanings: {0: "METAR", 1: "SPECIAL"},
         match: ""
       },
       {
         name: "Airport Code",
         pattern: /([A-Z]{3,4})?/g,
-        meanings: {1: "Airport Code"},
+        meanings: {0: "Airport Code"},
         match: ""
       },
       {
         name: "Date",
-        pattern: /a/,   ///\(d{6}Z)( AUTO)?( [A-Z]{2}[A-Z])?/,
-        meanings: {1: "Update Time", 2: "Automatic Station Indicator", 3: "Correction Indicator"},
+        pattern: /(\d{6}Z)( AUTO)?( [A-Z]{2}([A-Z]))?/,
+        meanings: {0: "Update Time", 1: "Automatic Station Indicator", 2: "Correction Indicator"},
         match: ""
       },
       {
         name: "Wind",
         pattern: /(\d{3}|VRB)(\d{1,2})G?(\d{1,2})KT/g,   //((\d{3})|(VRB))(\d{1,2})G?(\d{1,2})KT/g,
-        meanings: {1: "Wind Direction", 2: "Variable", 3: "Wind Speed", 4: "Gust"},
+        meanings: {0: "Wind Direction", 1: "Variable", 3: "Wind Speed", 4: "Gust"},
         match: ""
       },
       {
@@ -40,10 +40,9 @@ function decode_metar(e) {
         meanings: {1: "Wind Direction", 2: "Variable Wind Direction"},
         match: ""
       },
-
       {
         name: "Prevailing Visibility",
-        pattern: /\d{1,2}?\/?\d{1,2}SM/g,
+        pattern: /(\d{1,2})?\/?(\d{1,2})SM/g,
         meanings: {1: "Visibility (SM)"},
         match: ""
       },
@@ -103,7 +102,7 @@ function decode_metar(e) {
     console.log("\n")
     console.log(regex)
 
-    //while (m = regex.exec(mainMetarText)) {
+    //Find first instance of regex - we only care for the first one
     m = regex.exec(mainMetarText)
         // This is necessary to avoid infinite loops with zero-width matches
         // if (m.index === regex.lastIndex) {
@@ -111,7 +110,17 @@ function decode_metar(e) {
         // }
         //see whether to write
         //write =
-    if (m && !m.every(val => val === undefined || val === ""))  console.log(m)
+    if (m && m.some(val => val !== undefined && val !== "")) {
+        m = m.splice(1)
+        console.log(m)
+        //write props
+        // for (let item in m) {
+        //   // console.log(m[item + 1])
+        //   if (m[item] !== undefined && m[item] !== "") {
+        //     parsedMetar[metar]["match"] += `${parsedMetar[metar]["meanings"][item - 1]} - ${item - 1} ${m[item]} `
+        //   }
+        // }
+    } //console.log(m)
         // The result can be accessed through the `m`-variable.
         // m.forEach((match, groupIndex) => {
         //     if (match !== undefined && match !== "") {
@@ -161,7 +170,7 @@ function decode_metar(e) {
     //console.log()
   }
 
-
+  console.log(parsedMetar)
 }
 
 //REMARKS
