@@ -9,7 +9,7 @@ function decode_metar(e) {
   let mainMetarText = metar[0]
   const remarks = metar[1] || null
 
-  let parsedMetar = [
+  var parsedMetar = [
       { name: "Metar Type",
         pattern: /(METAR)|(SPECI)/g,
         meanings: {0: "METAR", 1: "SPECIAL"},
@@ -103,7 +103,6 @@ function decode_metar(e) {
     let regex = parsedMetar[metar].pattern
     //Find first instance of regex - we only care for the first one, starting from string
     m = regex.exec(mainMetarText.slice(prevIndex))
-    // console.log(m)
     //check for invalid match (there is no ""/undefined matches)
     if (!(m && m.some(val => val !== undefined && val !== ""))) continue
     //update prevIndex for next round
@@ -114,7 +113,8 @@ function decode_metar(e) {
     for (let item in m) {
       if (m[item] !== undefined && m[item] !== "") {
         let parserFunction = parsedMetar[metar]["parser"][item]
-        let data = parserFunction === null ? m[item] : parserFunction(m[item])
+
+        let data = parserFunction === null ? m[item] : parserFunction(m[item], metar, item)
         parsedMetar[metar]["match"].push({
           data: data,
           meaning: parsedMetar[metar]["meanings"][item]
@@ -140,16 +140,9 @@ function decode_metar(e) {
 
 //PARSER FUNCTIONS
 function parseAirportCode(data) {
-  //parse airport code
-  data = data.trim()
-  let iataCode = data.length === 3 ? data : data.slice(1, 4)
-  //Fetch airport data
-  const url = "http://iatacodes.org/api/v6/airports?api_key=2edabe9f-89a4-4fb5-862a-2a3a510cd5a8&code=" + iataCode
-  fetch(url)
-    .then(blob => blob.json())
-    .then(data => console.log(data))
-    .catch(err => console.log('fml'))
+  console.log(airportCodes.splice(1, 2))
 }
+
 function humanizeTime(data) {
   return data
 }
