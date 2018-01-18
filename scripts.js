@@ -18,7 +18,7 @@ function decode_metar(e) {
       },
       { name: "Airport Code",
         pattern: /([A-Z]{3,4})/g,
-        meanings: {0: ""},
+        meanings: {0: "ICAO Code"},
         parser: {0: parseAirportCode},
         match: []
       },
@@ -72,14 +72,14 @@ function decode_metar(e) {
       },
       { name: "Temperature",
         pattern: /(M?\d{1,2})\/(M?\d{1,2})/g,
-        meanings: {1: "Temperature", 2: "Dew Point"},
-        parser: {1: addDegrees, 2: null},
+        meanings: {0: "Temperature", 1: "Dew Point"},
+        parser: {0: addDegrees, 1: addDegrees},
         match: []
       },
       { name: "Altimeter Setting",
         pattern: /([AQ]\d{4})/g,
-        meanings: {1: "Altimeter"},
-        parser: {1: parseAltimeter},
+        meanings: {0: "Altimeter"},
+        parser: {0: parseAltimeter},
         match: []
       },
       { name: "Recent Weather",
@@ -113,8 +113,10 @@ function decode_metar(e) {
     for (let item in m) {
       if (m[item] !== undefined && m[item] !== "") {
         let parserFunction = parsedMetar[metar]["parser"][item]
-
-        let data = parserFunction === null ? m[item] : parserFunction(m[item], metar, item)
+        console.log(m)
+        console.log(regex)
+        console.log(item)
+        let data = parserFunction === null ? m[item] : parserFunction(m[item])
         parsedMetar[metar]["match"].push({
           data: data,
           meaning: parsedMetar[metar]["meanings"][item]
@@ -125,33 +127,54 @@ function decode_metar(e) {
   let ret = "";
   parsedMetar.forEach(val => {
     //if this needs to be written
-    if (val.match.length) {
+    if (val.match.length > 1) {
       ret += `<h1>${val.name}</h1>`
       ret += `<table>`
       for (let item in val.match) {
-        console.log(val.match)
         ret += `<tr><td>${val["match"][item]["meaning"]}</td><td>${val["match"][item]["data"]}</td></tr>`
       }
       ret += `</table>`
       results.innerHTML = ret
+    } else if (val.match.length === 1) {
+      ret += `<table><tr><td><h1>${val.name}</h1></td><td>${val["match"][0]["data"]}</td></tr></table>`
+
     }
   })
 }
 
 //PARSER FUNCTIONS
-function parseAirportCode(data) {
-  console.log(airportCodes.splice(1, 2))
+function parseAirportCode(icaoCode) {
+  //Get full airport name from ICAO code
+  let airportName = airportCodes.reduce((a, v) => {
+    return v.code === icaoCode ? v.name : a
+  }, icaoCode)
+  return `${icaoCode} ${airportName !== icaoCode ? '(' + airportName + ')' : "" }`
 }
 
-function humanizeTime(data) {
-  return data
+function addDegrees(temperature) {
+  //Add degree symbol and remove superfluous 0s
+  return parseInt(temperature.toString().replace("M", "-")) + "°"
 }
-function addDegrees(data) {
-  return data
-}
+
 function addKnots(data) {
   return data
 }
+
+
+
+
+
+function humanizeTime(data) {
+  //create UTC Date
+  //see if day of data is < 1 cf utc Date
+  //if so, update utc date's month to data's month and its time to data Time
+  //calcualte time diff
+  //return with time diff if exists
+  return `On day ${data.slice(0, 2)} at ${data.slice(2, 6)} Zulu`
+}
+
+
+
 function addDistance(data) {
   return data
 }
