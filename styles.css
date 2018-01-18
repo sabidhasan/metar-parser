@@ -30,8 +30,10 @@ input[type=text] {
   padding: 3px;
   border: 2px solid darkgray;
   background-color: lightgray;
+  outline: none;
 }
 
+table h1 {text-align: left;}
 .results {
   padding: 0.5rem;
   margin-top: 2rem;
@@ -43,6 +45,5 @@ table {
   border-collapse: collapse;
 }
 td {
-
-  padding: 0.5rem;
+  width: 50%;
 }
