@@ -71,7 +71,7 @@ function decode_metar(e) {
         match: []
       },
       { name: "Temperature",
-        pattern: /(M?\d{1,2})\/(M?\d{1,2})/g,
+        pattern: /\b(M?\d{1,2})\/(M?\d{1,2})\b/g,
         meanings: {0: "Temperature", 1: "Dew Point"},
         parser: {0: addDegrees, 1: addDegrees},
         match: []
@@ -137,7 +137,7 @@ function decode_metar(e) {
       results.innerHTML = ret
     } else if (val.match.length === 1) {
       ret += `<table><tr><td><h1>${val.name}</h1></td><td>${val["match"][0]["data"]}</td></tr></table>`
-
+      results.innerHTML = ret
     }
   })
 }
@@ -157,26 +157,66 @@ function addDegrees(temperature) {
 }
 
 function addKnots(data) {
-  return data
+  // Add knots symbol
+  return data + " kts"
+}
+function ordinal(i) {
+    //add ordinal number endings - Modified from https://stackoverflow.com/questions/13627308
+    var j = i % 10,
+        k = i % 100;
+    if (j == 1 && k != 11) {
+        return parseInt(i).toString() + "st";
+    }
+    if (j == 2 && k != 12) {
+        return parseInt(i).toString() + "nd";
+    }
+    if (j == 3 && k != 13) {
+        return parseInt(i).toString() + "rd";
+    }
+    return parseInt(i).toString() + "th";
 }
 
 
-
-
-
 function humanizeTime(data) {
-  //create UTC Date
-  //see if day of data is < 1 cf utc Date
-  //if so, update utc date's month to data's month and its time to data Time
-  //calcualte time diff
-  //return with time diff if exists
-  return `On day ${data.slice(0, 2)} at ${data.slice(2, 6)} Zulu`
+  //Return humanized form of time data
+  const now = new Date;
+  const suppliedDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), parseInt(data.slice(0, 2)), parseInt(data.slice(2, 4)), parseInt(data.slice(4, 6))))
+
+  //check if data is old or in the future, if it is then lets just return it without serious parsing
+  let dateDiff = now.getUTCDate() - parseInt(data.slice(0, 2))
+  //get time difference in milliseconds
+  let rawDiff = now - suppliedDate
+
+  if (dateDiff === 0) {
+    date = "Today"
+  } else if (dateDiff === 1) {
+    date = "Yesterday"
+  } else {
+    date = ordinal(data.slice(0,2))
+  }
+
+  //Check for future Time or past/future dates (except today/yesterday)
+  if (dateDiff > 1 || dateDiff < 0) {
+    return `On the ${date} day at ${data.slice(2, 4)}:${data.slice(4, 6)} ${data.slice(-1)}`
+  } else if (rawDiff < 0) {
+    return `${date} at ${data.slice(2, 4)}:${data.slice(4, 6)} ${data.slice(-1)}`
+  }
+
+  //determine hours, min, sec
+  var hh = Math.floor(rawDiff / 1000 / 60 / 60);
+  rawDiff -= hh * 1000 * 60 * 60;
+  var mm = Math.floor(rawDiff / 1000 / 60);
+  rawDiff -= mm * 1000 * 60;
+  var ss = Math.floor(rawDiff / 1000);
+  const age = (hh > 0 ? `${hh}h ` : "") + (mm > 0 ? `${mm}m ` : "") + (ss > 0 ? `${ss}s ` : "") + "ago"
+
+  return `${date} at ${data.slice(2, 4)}:${data.slice(4, 6)} ${data.slice(-1)} (${age})`
 }
 
 
 
 function addDistance(data) {
-  return data
+  return data + " nm"
 }
 function addTrend(data) {
   return data
