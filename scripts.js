@@ -52,12 +52,35 @@ function decode_metar(e) {
         parser: {1: null, 2: addDistance, 3: addTrend},
         match: []
       },
-      { name: "Weather Description",
-        pattern: /(-|\+|VC)?(MI|BC|PR|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)?(BR|FG|FU|VA|DU|SA|HZ)?(PO|SQ|\+?FC|\+?SS|\+?DS)?/g,
-        meanings: {1: "Intensity", 2: "Descriptor", 3: "Precipitation", 4: "Obscuration", 5: "Other"},
-        parser: {1: null, 2: parseWeatherDescriptions, 3: parseWeatherDescriptions, 4: parseWeatherDescriptions, 5: parseWeatherDescriptions},
+
+
+      { name: "Weather Descriptor",
+        pattern: /([-]|[+]|VC)?[A-Z]{2}\b/,
+        meanings: {0: "Weather Descriptor"},
+        parser: {0: parseWeatherDescriptions},
         match: []
       },
+      { name: "Precipitation Descriptor",
+      pattern: /([-]|[+]|VC)?[A-Z]{2}\b/,
+        meanings: {0: "Precipitation Descriptor"},
+        parser: {0: parseWeatherDescriptions},
+        match: []
+      },
+      { name: "Obscuration Descriptor",
+      pattern: /([-]|[+]|VC)?[A-Z]{2}\b/,
+        meanings: {0: "Obscuration Descriptor"},
+        parser: {0: parseWeatherDescriptions},
+        match: []
+      },
+      { name: "Other Weather Phenomena",
+      pattern: /([-]|[+]|VC)?[A-Z]{3}\b/,
+        meanings: {0: "Other Weather Phenomena"},
+        parser: {0: parseWeatherDescriptions},
+        match: []
+      },
+
+
+
       { name: "Clouds",
         pattern: /(CAVOK)|(( ?(SKC|FEW|SCT|BKN|OVC|VV)(\d{3}))*)/g,
         meanings: {1: "Ceiling and Visibility OK", 2: "Clouds"},
@@ -103,19 +126,22 @@ function decode_metar(e) {
     let regex = parsedMetar[metar].pattern
     //Find first instance of regex - we only care for the first one, starting from string
     m = regex.exec(mainMetarText.slice(prevIndex))
+//     if (metar >= 7) {
+//
+// console.log("\n")
+// console.log(m)
+// console.log(regex)
+// }
     //check for invalid match (there is no ""/undefined matches)
     if (!(m && m.some(val => val !== undefined && val !== ""))) continue
     //update prevIndex for next round
-    prevIndex = m.index + m[0].length
+    prevIndex += m.index + m[0].length
     //get rid of first item, which is entire match
     m = m.splice(1)
     //update 'match' property in parsedMetar while using parser functions
     for (let item in m) {
       if (m[item] !== undefined && m[item] !== "") {
         let parserFunction = parsedMetar[metar]["parser"][item]
-        console.log(m)
-        console.log(regex)
-        console.log(item)
         let data = parserFunction === null ? m[item] : parserFunction(m[item])
         parsedMetar[metar]["match"].push({
           data: data,
@@ -153,7 +179,7 @@ function parseAirportCode(icaoCode) {
 
 function addDegrees(temperature) {
   //Add degree symbol and remove superfluous 0s
-  return parseInt(temperature.toString().replace("M", "-")) + "°"
+  return parseInt(temperature.toString().replace("M", "-")) + "°C"
 }
 
 function addKnots(data) {
@@ -162,17 +188,10 @@ function addKnots(data) {
 }
 function ordinal(i) {
     //add ordinal number endings - Modified from https://stackoverflow.com/questions/13627308
-    var j = i % 10,
-        k = i % 100;
-    if (j == 1 && k != 11) {
-        return parseInt(i).toString() + "st";
-    }
-    if (j == 2 && k != 12) {
-        return parseInt(i).toString() + "nd";
-    }
-    if (j == 3 && k != 13) {
-        return parseInt(i).toString() + "rd";
-    }
+    var j = i % 10, k = i % 100
+    if (j == 1 && k != 11) return parseInt(i).toString() + "st";
+    if (j == 2 && k != 12) return parseInt(i).toString() + "nd";
+    if (j == 3 && k != 13) return parseInt(i).toString() + "rd";
     return parseInt(i).toString() + "th";
 }
 
@@ -216,11 +235,14 @@ function humanizeTime(data) {
 
 
 function addDistance(data) {
+  //add NM distance units
   return data + " nm"
 }
+
 function addTrend(data) {
   return data
 }
+
 function parseWeatherDescriptions(data) {
   return data
 }
