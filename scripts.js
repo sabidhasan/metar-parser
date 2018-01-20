@@ -29,7 +29,7 @@ function decode_metar(e) {
         match: []
       },
       { name: "Wind",
-        pattern: /(\d{3}|VRB)(\d{1,2})G?(\d{1,2})KT/g,   //((\d{3})|(VRB))(\d{1,2})G?(\d{1,2})KT/g,
+        pattern: /(\d{3}|VRB)(\d{2})?G?(\d{2})KT/g,   //((\d{3})|(VRB))(\d{1,2})G?(\d{1,2})KT/g,
         meanings: {0: "Wind Direction", 1: "Variable", 2: "Wind Speed", 3: "Gust"},
         parser: {0: addDegrees, 1: null, 2: addKnots, 3: addKnots},
         match: []
@@ -54,31 +54,32 @@ function decode_metar(e) {
       },
 
 
-      { name: "Weather Descriptor",
-        pattern: /([-]|[+]|VC)?[A-Z]{2}\b/,
-        meanings: {0: "Weather Descriptor"},
-        parser: {0: parseWeatherDescriptions},
-        match: []
-      },
-      { name: "Precipitation Descriptor",
-      pattern: /([-]|[+]|VC)?[A-Z]{2}\b/,
-        meanings: {0: "Precipitation Descriptor"},
-        parser: {0: parseWeatherDescriptions},
-        match: []
-      },
-      { name: "Obscuration Descriptor",
-      pattern: /([-]|[+]|VC)?[A-Z]{2}\b/,
-        meanings: {0: "Obscuration Descriptor"},
-        parser: {0: parseWeatherDescriptions},
-        match: []
-      },
-      { name: "Other Weather Phenomena",
-      pattern: /([-]|[+]|VC)?[A-Z]{3}\b/,
-        meanings: {0: "Other Weather Phenomena"},
-        parser: {0: parseWeatherDescriptions},
-        match: []
-      },
 
+
+      { name: "Weather - Descriptor",
+        pattern: /( (?:[-+]|VC)?[A-Z]{2}\b)/,
+        meanings: {0: "Descriptor"},
+        parser: {0: parseWeatherDescriptions},
+        match: []
+      },
+      { name: "Weather - Precipitation",
+        pattern: /( (?:[-+]|VC)?[A-Z]{2}\b)/,
+        meanings: {0: "Precipitation"},
+        parser: {0: parseWeatherDescriptions},
+        match: []
+      },
+      { name: "Weather - Obscuration",
+        pattern: /( (?:[-+]|VC)?[A-Z]{2}\b)/,
+        meanings: {0: "Descriptor"},
+        parser: {0: parseWeatherDescriptions},
+        match: []
+      },
+      { name: "Weather - Other Phenomena",
+        pattern: /( (?:[-+]|VC)?[A-Z]{3}\b)/,
+        meanings: {0: "Other Phenomena"},
+        parser: {0: parseWeatherDescriptions},
+        match: []
+      },
 
 
       { name: "Clouds",
@@ -126,13 +127,14 @@ function decode_metar(e) {
     let regex = parsedMetar[metar].pattern
     //Find first instance of regex - we only care for the first one, starting from string
     m = regex.exec(mainMetarText.slice(prevIndex))
-//     if (metar >= 7) {
-//
-// console.log("\n")
-// console.log(m)
-// console.log(regex)
-// }
     //check for invalid match (there is no ""/undefined matches)
+    if (metar >= 7) {
+
+console.log("\n")
+console.log(m)
+console.log(regex)
+}
+
     if (!(m && m.some(val => val !== undefined && val !== ""))) continue
     //update prevIndex for next round
     prevIndex += m.index + m[0].length
@@ -177,15 +179,21 @@ function parseAirportCode(icaoCode) {
   return `${icaoCode} ${airportName !== icaoCode ? '(' + airportName + ')' : "" }`
 }
 
+function parseAltimeter(data) {
+  //parse QNH data
+  return data.replace("Q", "QNH ").replace("A", "A ")
+}
+
 function addDegrees(temperature) {
   //Add degree symbol and remove superfluous 0s
-  return parseInt(temperature.toString().replace("M", "-")) + "°C"
+  return parseInt(temperature.toString().replace("M", "-")) + "°"
 }
 
 function addKnots(data) {
   // Add knots symbol
-  return data + " kts"
+  return parseInt(data).toString() + " kts";
 }
+
 function ordinal(i) {
     //add ordinal number endings - Modified from https://stackoverflow.com/questions/13627308
     var j = i % 10, k = i % 100
@@ -194,7 +202,6 @@ function ordinal(i) {
     if (j == 3 && k != 13) return parseInt(i).toString() + "rd";
     return parseInt(i).toString() + "th";
 }
-
 
 function humanizeTime(data) {
   //Return humanized form of time data
@@ -213,14 +220,12 @@ function humanizeTime(data) {
   } else {
     date = ordinal(data.slice(0,2))
   }
-
   //Check for future Time or past/future dates (except today/yesterday)
   if (dateDiff > 1 || dateDiff < 0) {
     return `On the ${date} day at ${data.slice(2, 4)}:${data.slice(4, 6)} ${data.slice(-1)}`
   } else if (rawDiff < 0) {
     return `${date} at ${data.slice(2, 4)}:${data.slice(4, 6)} ${data.slice(-1)}`
   }
-
   //determine hours, min, sec
   var hh = Math.floor(rawDiff / 1000 / 60 / 60);
   rawDiff -= hh * 1000 * 60 * 60;
@@ -234,6 +239,13 @@ function humanizeTime(data) {
 
 
 
+
+
+
+
+
+
+
 function addDistance(data) {
   //add NM distance units
   return data + " nm"
@@ -244,12 +256,23 @@ function addTrend(data) {
 }
 
 function parseWeatherDescriptions(data) {
+  //remove any whitespace
+  data = data.trim()
+  console.log(data)
+  // look for quantifier
+  const quantifiers = {"+": "Heavy", "-": "Light", "VC": "In the vicinity"}
+  //will hold current quantifier
+  let dataQuantifier
+  Object.keys(quantifiers).forEach(quant => {
+    if (data.includes(quant)) {
+      dataQuantifier = quantifiers[quant]
+      data = data.replace(quant, "")
+    }
+  })
+
   return data
 }
 function parseClouds(data) {
-  return data
-}
-function parseAltimeter(data) {
   return data
 }
 

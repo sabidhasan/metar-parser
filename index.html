@@ -27,7 +27,9 @@
 
     <script>
       const inputBox = document.querySelector(".metarText")
+      inputBox.addEventListener("keyup", () => document.querySelector(".results").innerHTML = "")
       inputBox.addEventListener("keyup", decode_metar)
+
     </script>
 
   </body>
