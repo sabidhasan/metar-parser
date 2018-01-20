@@ -218,13 +218,24 @@ function humanizeTime(data) {
   } else if (dateDiff === 1) {
     date = "Yesterday"
   } else {
-    date = ordinal(data.slice(0,2))
+    //Check for valid date
+    if (parseInt(data.slice(0,2)) > 31 || parseInt(data.slice(0,2)) < 1) {
+      date = `<span class="error">${ordinal(data.slice(0,2))}</span>`
+    } else {
+      date = ordinal(data.slice(0,2))
+    }
   }
+  if ( parseInt(data.slice(2, 4)) > 24 || parseInt(data.slice(2, 4)) < 0 || parseInt(data.slice(4, 6)) > 60 || parseInt(data.slice(4, 6)) < 0 ) {
+    var parsedTime = `<span class="error">${data.slice(2, 4)}:${data.slice(4, 6)}</span> ${data.slice(-1)}`
+  } else {
+    var parsedTime = `${data.slice(2, 4)}:${data.slice(4, 6)} ${data.slice(-1)}`
+  }
+
   //Check for future Time or past/future dates (except today/yesterday)
   if (dateDiff > 1 || dateDiff < 0) {
-    return `On the ${date} day at ${data.slice(2, 4)}:${data.slice(4, 6)} ${data.slice(-1)}`
+    return `On the ${date} day at ${parsedTime}`
   } else if (rawDiff < 0) {
-    return `${date} at ${data.slice(2, 4)}:${data.slice(4, 6)} ${data.slice(-1)}`
+    return `${date} at ${parsedTime}`
   }
   //determine hours, min, sec
   var hh = Math.floor(rawDiff / 1000 / 60 / 60);
@@ -234,7 +245,7 @@ function humanizeTime(data) {
   var ss = Math.floor(rawDiff / 1000);
   const age = (hh > 0 ? `${hh}h ` : "") + (mm > 0 ? `${mm}m ` : "") + (ss > 0 ? `${ss}s ` : "") + "ago"
 
-  return `${date} at ${data.slice(2, 4)}:${data.slice(4, 6)} ${data.slice(-1)} (${age})`
+  return `${date} at ${parsedTime} (${age})`
 }
 
 
