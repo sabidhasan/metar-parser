@@ -56,3 +56,33 @@ tr td:nth-child(1) {
 .error {
   color: red;
 }
+
+
+/* .parsed {
+  display: inline-block;
+  border: 2px solid gray;
+  padding: 0.25rem;
+  border-radius: 20px;
+  background: lightgray;
+  /* transition: all 0.1s linear; */
+/* }
+.parsed:hover { */
+  /* transform: translateY(-50%); */
+  /* opacity: 0.0; */
+  /* visibility: hidden; */
+/* }
+.parsed:hover ~ div {
+  visibility: visible;
+  transform: translateY(-100%);
+}
+*/
+.original {
+  display: none;
+  /* display: block;
+  visibility: hidden;
+  border: 2px solid gray;
+  padding: 0.25rem;
+  border-radius: 20px;
+  background: lightgray; */ */
+  /* transition: all 0.1s linear; */
+}
