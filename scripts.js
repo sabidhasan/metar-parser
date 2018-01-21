@@ -19,7 +19,7 @@ function decode_metar(e) {
       },
       { name: "Airport Code",
         repeatSearch: false,
-        pattern: /([A-Z]{3,4})/,
+        pattern: /\b([A-Z]{3,4})\b/,
         meanings: {0: "ICAO Code"},
         parser: {0: parseAirportCode},
         match: []
@@ -128,6 +128,7 @@ function decode_metar(e) {
       //update prevIndex for next search (this is the "current" position in string)
       prevIndex += m.index + m[0].length
       //Discard first item, which is *entire* match
+      let fullMatch = m[0]
       m = m.splice(1)
       //update 'match' property in parsedMetar while using parser functions
       for (let item in m) {
@@ -136,7 +137,8 @@ function decode_metar(e) {
           let data = parserFunction === null ? m[item] : parserFunction(m[item])
           parsedMetar[metar]["match"].push({
             data: data,
-            meaning: parsedMetar[metar]["meanings"][item]
+            meaning: parsedMetar[metar]["meanings"][item],
+            originalText: fullMatch
           })
         }
       }
@@ -151,12 +153,12 @@ function decode_metar(e) {
       ret += `<h1>${val.name}</h1>`
       ret += `<table>`
       for (let item in val.match) {
-        ret += `<tr><td>${val["match"][item]["meaning"]}</td><td>${val["match"][item]["data"]}</td></tr>`
+        ret += `<tr><td>${val["match"][item]["meaning"]}</td><td><div class="parsed">${val["match"][item]["data"]}</div><div class="original">${val["match"][item]["originalText"]}</div></td></tr>`
       }
       ret += `</table>`
       results.innerHTML = ret
     } else if (val.match.length === 1) {
-      ret += `<table><tr><td><h1>${val.name}</h1></td><td>${val["match"][0]["data"]}</td></tr></table>`
+      ret += `<table><tr><td><h1>${val.name}</h1></td><td><div class="parsed">${val["match"][0]["data"]}</div><div class="original">${val["match"][0]["originalText"]}</div></td></tr></table>`
       results.innerHTML = ret
     }
   })
@@ -288,48 +290,57 @@ function parseRunway(data) {
   }
   return data
 }
+
 function parseWeatherDescriptions(data) {
   //remove whitespace
   let localData = data.trim()
 
   //Check for complex Phenomena
   const complexPhenomena = {"+FC": "Tornado or Waterspout", "+DS": "Duststorm with 5/16 SM Visibility", "+SS": "Sandstorm with 5/16 SM Visibility"}
-  if (localData in complexPhenomena) {
-    return `${data.trim()} - ${complexPhenomena[localData]}`
-  }
+  if (localData in complexPhenomena) return `${data.trim()} - ${complexPhenomena[localData]}`
 
-  // look for quantifier
+  //defintions for phenomena
   const quantifiers = {"+": "Heavy", "-": "Light", "VC": "In the vicinity"}
-  let dataQuantifier = ""
-  Object.keys(quantifiers).forEach(quant => {
-    if (localData.slice(0, 1) == quant || localData.slice(0, 2) == quant) {
-      dataQuantifier = quantifiers[quant]
-      localData = localData.replace(quant, "")
-    }
-  })
-
-  //now look for description
   const dict = { MI: "Shallow", BC: "Patches", PR: "Partial", DR: "Drifting", BL: "Blowing", SH: "Showers", TS: "Thunderstorm", FZ: "Freezing",
     DZ: "Drizzle", RA: "Rain", SN: "Snow", SG: "Snow Grains", IC: "Ice Crystals", PL: "Ice Pellets", GR: "Hail", GS: "Snow Pellets",
     UP: "Unknown Precipitation", BR: "Mist", FG: "Fog", FU: "Smoke", VA: "Volcanic Ash", DU: "Dust", SA: "Sand", HZ: "Haze", PO: "Dust Devils",
     SQ: "Squalls", FC: "Funnel Cloud", SS: "Sandstorm", DS: "Duststorm"
   }
+  //index keeps track of where in string we are
   let index = 0
+  //description holds the entire array
   let description = []
+  //loop through text
   while (index < localData.length) {
-    let currentSlice = localData.slice(index, index + 2)
-    if (currentSlice in dict) {
-      description.push(dict[currentSlice])
+    //holds current description (value)
+    let currentDescription = ""
+    //check for +, -, or VC (quantifiers)
+    if (localData.charAt(index) in quantifiers) {
+      currentDescription += quantifiers[localData.charAt(index)] + " ";
+      index += 1;
     }
-    index += 2
+    //Look at next two letters to see if they are in dict
+    let currentSlice = localData.slice(index, index + 2)
+    //look for description
+    if (currentSlice in dict) {
+      currentDescription += dict[currentSlice] + " "
+    } else {
+      //invalid description
+      currentDescription += `<span class="error">${currentSlice}</span>`;
+    }
+    if (currentDescription) description.push(currentDescription.trim())
+    index += 2;
   }
-  return "null";
 
-  if (localData in dict) {
-    return `${data.trim()} - ${dataQuantifier} ${dict[localData]}`
-  }
-  //Unknown so return error
-  return `${data.trim()} - ${dataQuantifier} <span class="error">${localData}</span>`
+//
+
+  return description.join(" / ");
+  //
+  // if (localData in dict) {
+  //   return `${data.trim()} - ${dataQuantifier} ${dict[localData]}`
+  // }
+  // //Unknown so return error
+  // return `${data.trim()} - ${dataQuantifier} <span class="error">${localData}</span>`
 }
 
 function parseCorrection(data) {
