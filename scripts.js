@@ -11,110 +11,101 @@ function decode_metar(e) {
 
   var parsedMetar = [
       { name: "Metar Type",
-        pattern: /(METAR)|(SPECI)/g,
+        repeatSearch: false,
+        pattern: /(METAR)|(SPECI)/,
         meanings: {0: "METAR", 1: "SPECIAL"},
         parser: {0: null, 1: null},
         match: []
       },
       { name: "Airport Code",
-        pattern: /([A-Z]{3,4})/g,
+        repeatSearch: false,
+        pattern: /([A-Z]{3,4})/,
         meanings: {0: "ICAO Code"},
         parser: {0: parseAirportCode},
         match: []
       },
       { name: "Date",
+        repeatSearch: false,
         pattern: /(\d{6}Z)( AUTO)?( [A-Z]{3}\b)?/,
         meanings: {0: "Update Time", 1: "Automatic Station Indicator", 2: "Correction Indicator"},
         parser: {0: humanizeTime, 1: null, 2: parseCorrection},
         match: []
       },
       { name: "Wind",
-        pattern: /(\d{3}|VRB)(\d{2}(?:G))?(\d{2}(?:KT|MPS))/g,   //((\d{3})|(VRB))(\d{1,2})G?(\d{1,2})KT/g,
+        repeatSearch: false,
+        pattern: /(\d{3}|VRB)(\d{2}(?:G))?(\d{2}(?:KT|MPS))/,   //((\d{3})|(VRB))(\d{1,2})G?(\d{1,2})KT/g,
         meanings: {0: "Wind Direction", 1: "Wind Speed/Gust", 2: "Wind Speed/Gust"},
         parser: {0: addDegrees, 1: addSpeed, 2: addSpeed},
         match: []
       },
       { name: "Wind Variability",
-        pattern: /(\d{3})V(\d{3})\b/g,
+        repeatSearch: false,
+        pattern: /(\d{3})V(\d{3})\b/,
         meanings: {0: "Wind Direction", 1: "Variable Wind Direction"},
         parser: {0: addDegrees, 1: addDegrees},
         match: []
       },
       { name: "Prevailing Visibility",
-        pattern: /(\d{1,4}(?:[/]\d{1,4}SM)?)\b/g,
+        repeatSearch: false,
+        pattern: /(\d{1,4}(?:[/]\d{1,4}SM)?)\b/,
         meanings: {0: "Prevailing Visibility"},
         parser: {0: addDistance},
         match: []
       },
       { name: "Runway Visibility",
         repeatSearch: true,
-        pattern: /(R\d{1,2}[CLR]?)[/]P?(\d{3,4}(?:FT)?)([/]?[DUN])?/g,
+        pattern: /(R\d{1,2}[CLR]?)[/]P?(\d{3,4}(?:FT)?)([/]?[DUN])?/,
         meanings: {0: "Runway", 1: "Visual Range", 2: "Trending"},
         parser: {0: parseRunway, 1: addDistance, 2: addTrend},
         match: []
       },
 
-
-
-
       { name: "Weather",
+        repeatSearch: true,
         pattern: /( (?:[-+]|VC)?[A-Z]{2,6}\b)/,
         meanings: {0: "Descriptor"},
         parser: {0: parseWeatherDescriptions},
         match: []
       },
-      { name: "Weather",
-        pattern: /( (?:[-+]|VC)?[A-Z]{2,6}\b)/,
-        meanings: {0: "Precipitation"},
-        parser: {0: parseWeatherDescriptions},
-        match: []
-      },
-      { name: "Weather",
-        pattern: /( (?:[-+]|VC)?[A-Z]{2,6}\b)/,
-        meanings: {0: "Descriptor"},
-        parser: {0: parseWeatherDescriptions},
-        match: []
-      },
-      { name: "Weather",
-        pattern: /( (?:[-+]|VC)?[A-Z]{2,6}\b)/,
-        meanings: {0: "Other Phenomena"},
-        parser: {0: parseWeatherDescriptions},
-        match: []
-      },
-
 
       { name: "Clouds",
-        pattern: /(CAVOK)|(( ?(SKC|FEW|SCT|BKN|OVC|VV)(\d{3}))*)/g,
+      repeatSearch: false,
+        pattern: /(CAVOK)|(( ?(SKC|FEW|SCT|BKN|OVC|VV)(\d{3}))*)/,
         meanings: {1: "Ceiling and Visibility OK", 2: "Clouds"},
         parser: {1: null, 2: parseClouds},
         match: []
       },
       { name: "Vertical Visibility",
+      repeatSearch: false,
         pattern: /VV(\d{3})/g,
         meanings: {1: "Vertical Visibility"},
         parser: {1: null},
         match: []
       },
       { name: "Temperature",
-        pattern: /\b(M?\d{1,2})\/(M?\d{1,2})\b/g,
+      repeatSearch: false,
+        pattern: /\b(M?\d{1,2})\/(M?\d{1,2})\b/,
         meanings: {0: "Temperature", 1: "Dew Point"},
         parser: {0: addDegrees, 1: addDegrees},
         match: []
       },
       { name: "Altimeter Setting",
-        pattern: /([AQ]\d{4})/g,
+      repeatSearch: false,
+        pattern: /([AQ]\d{4})/,
         meanings: {0: "Altimeter"},
         parser: {0: parseAltimeter},
         match: []
       },
       { name: "Recent Weather",
-        pattern: /RE([A-Z]{2,6}?)/g,
+      repeatSearch: false,
+        pattern: /RE([A-Z]{2,6}?)/,
         meanings: {1: "Descriptor", 2: "Weather Phenomenon"},
         parser: {1: parseWeatherDescriptions, 2: parseWeatherDescriptions},
         match: []
       },
       { name: "Windshear",
-        pattern: /WS ((RWY\d{2})|(ALLRWY))/g,
+      repeatSearch: false,
+        pattern: /WS ((RWY\d{2})|(ALLRWY))/,
         meanings: {1: "Runway Affected"},
         parser: {1: null},
         match: []
@@ -125,38 +116,34 @@ function decode_metar(e) {
   let prevIndex = 0
   //Loop through each metar item
   for (let metar in parsedMetar) {
-    let regex = parsedMetar[metar].pattern
-    //Find first instance of regex - we only care for the first one, starting from string
-    m = regex.exec(mainMetarText.slice(prevIndex))
-    //check for invalid match (there is no ""/undefined matches)
-//     if (metar == 5) {
-//
-console.log("\n")
-console.log(m)
-console.log(regex)
-// }
+    //Do loop runs again if "repeatSearch" is true, and it finds a match in current iteration
+    do {
+      let regex = parsedMetar[metar].pattern
+      //Find first instance of regex - we only care for the first one, starting from string
+      m = regex.exec(mainMetarText.slice(prevIndex))
 
-    if (!(m && m.some(val => val !== undefined && val !== ""))) continue
-    //update prevIndex for next round
-    prevIndex += m.index + m[0].length
-    //get rid of first item, which is entire match
-    m = m.splice(1)
-    //update 'match' property in parsedMetar while using parser functions
-    for (let item in m) {
-      if (m[item] !== undefined && m[item] !== "") {
-        // console.log("\n")
-        // console.log(m[item])
-        // console.log(item)
-        // console.log(parsedMetar[metar]["parser"])
-        let parserFunction = parsedMetar[metar]["parser"][item]
-        let data = parserFunction === null ? m[item] : parserFunction(m[item])
-        parsedMetar[metar]["match"].push({
-          data: data,
-          meaning: parsedMetar[metar]["meanings"][item]
-        })
+      //check for invalid match (there is no ""/undefined matches)
+      if (!(m && m.some(val => val !== undefined && val !== ""))) break
+
+      //update prevIndex for next search (this is the "current" position in string)
+      prevIndex += m.index + m[0].length
+      //Discard first item, which is *entire* match
+      m = m.splice(1)
+      //update 'match' property in parsedMetar while using parser functions
+      for (let item in m) {
+        if (m[item] !== undefined && m[item] !== "") {
+          let parserFunction = parsedMetar[metar]["parser"][item]
+          let data = parserFunction === null ? m[item] : parserFunction(m[item])
+          parsedMetar[metar]["match"].push({
+            data: data,
+            meaning: parsedMetar[metar]["meanings"][item]
+          })
+        }
       }
-    }
+    } while (parsedMetar[metar].repeatSearch === true)
   }
+
+
   let ret = "";
   parsedMetar.forEach(val => {
     //if this needs to be written
