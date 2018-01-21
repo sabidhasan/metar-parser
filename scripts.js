@@ -47,6 +47,7 @@ function decode_metar(e) {
         match: []
       },
       { name: "Runway Visibility",
+        repeatSearch: true,
         pattern: /(R\d{1,2}[CLR]?)[/]P?(\d{3,4}(?:FT)?)([/]?[DUN])?/g,
         meanings: {0: "Runway", 1: "Visual Range", 2: "Trending"},
         parser: {0: parseRunway, 1: addDistance, 2: addTrend},
