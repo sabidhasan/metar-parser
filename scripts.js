@@ -23,59 +23,59 @@ function decode_metar(e) {
         match: []
       },
       { name: "Date",
-        pattern: /(\d{6}Z)( AUTO)?( [A-Z]{2}([A-Z]))?/,
+        pattern: /(\d{6}Z)( AUTO)?( [A-Z]{3}\b)?/,
         meanings: {0: "Update Time", 1: "Automatic Station Indicator", 2: "Correction Indicator"},
-        parser: {0: humanizeTime, 1: null, 2: null},
+        parser: {0: humanizeTime, 1: null, 2: parseCorrection},
         match: []
       },
       { name: "Wind",
-        pattern: /(\d{3}|VRB)(\d{2})?G?(\d{2})KT/g,   //((\d{3})|(VRB))(\d{1,2})G?(\d{1,2})KT/g,
-        meanings: {0: "Wind Direction", 1: "Variable", 2: "Wind Speed", 3: "Gust"},
-        parser: {0: addDegrees, 1: null, 2: addKnots, 3: addKnots},
+        pattern: /(\d{3}|VRB)(\d{2}(?:G))?(\d{2}(?:KT|MPS))/g,   //((\d{3})|(VRB))(\d{1,2})G?(\d{1,2})KT/g,
+        meanings: {0: "Wind Direction", 1: "Wind Speed/Gust", 2: "Wind Speed/Gust"},
+        parser: {0: addDegrees, 1: addSpeed, 2: addSpeed},
         match: []
       },
       { name: "Wind Variability",
-        pattern: /(\d{3})V(\d{3})/g,
-        meanings: {1: "Wind Direction", 2: "Variable Wind Direction"},
-        parser: {1: addDegrees, 2: addDegrees},
+        pattern: /(\d{3})V(\d{3})\b/g,
+        meanings: {0: "Wind Direction", 1: "Variable Wind Direction"},
+        parser: {0: addDegrees, 1: addDegrees},
         match: []
       },
       { name: "Prevailing Visibility",
-        pattern: /(\d{1,2})?\/?(\d{1,2})SM/g,
-        meanings: {1: "Visibility", 2: "Visibility"},
-        parser: {1: addDistance, 2: addDistance},
+        pattern: /(\d{1,4}(?:[/]\d{1,4}SM)?)\b/g,
+        meanings: {0: "Prevailing Visibility"},
+        parser: {0: addDistance},
         match: []
       },
       { name: "Runway Visibility",
-        pattern: /(R\d{1,2}[CLR]?)\/(\d{4})FT(\/([DUN]))?/g,
-        meanings: {1: "Runway", 2: "Visual Range", 3: "Trending"},
-        parser: {1: null, 2: addDistance, 3: addTrend},
+        pattern: /(R\d{1,2}[CLR]?)[/]P?(\d{3,4}(?:FT)?)([/]?[DUN])?/g,
+        meanings: {0: "Runway", 1: "Visual Range", 2: "Trending"},
+        parser: {0: parseRunway, 1: addDistance, 2: addTrend},
         match: []
       },
 
 
 
 
-      { name: "Weather - Descriptor",
-        pattern: /( (?:[-+]|VC)?[A-Z]{2}\b)/,
+      { name: "Weather",
+        pattern: /( (?:[-+]|VC)?[A-Z]{2,6}\b)/,
         meanings: {0: "Descriptor"},
         parser: {0: parseWeatherDescriptions},
         match: []
       },
-      { name: "Weather - Precipitation",
-        pattern: /( (?:[-+]|VC)?[A-Z]{2}\b)/,
+      { name: "Weather",
+        pattern: /( (?:[-+]|VC)?[A-Z]{2,6}\b)/,
         meanings: {0: "Precipitation"},
         parser: {0: parseWeatherDescriptions},
         match: []
       },
-      { name: "Weather - Obscuration",
-        pattern: /( (?:[-+]|VC)?[A-Z]{2}\b)/,
+      { name: "Weather",
+        pattern: /( (?:[-+]|VC)?[A-Z]{2,6}\b)/,
         meanings: {0: "Descriptor"},
         parser: {0: parseWeatherDescriptions},
         match: []
       },
-      { name: "Weather - Other Phenomena",
-        pattern: /( (?:[-+]|VC)?[A-Z]{3}\b)/,
+      { name: "Weather",
+        pattern: /( (?:[-+]|VC)?[A-Z]{2,6}\b)/,
         meanings: {0: "Other Phenomena"},
         parser: {0: parseWeatherDescriptions},
         match: []
@@ -107,7 +107,7 @@ function decode_metar(e) {
         match: []
       },
       { name: "Recent Weather",
-        pattern: /RE(MI|BC|PR|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ)?/g,
+        pattern: /RE([A-Z]{2,6}?)/g,
         meanings: {1: "Descriptor", 2: "Weather Phenomenon"},
         parser: {1: parseWeatherDescriptions, 2: parseWeatherDescriptions},
         match: []
@@ -128,12 +128,12 @@ function decode_metar(e) {
     //Find first instance of regex - we only care for the first one, starting from string
     m = regex.exec(mainMetarText.slice(prevIndex))
     //check for invalid match (there is no ""/undefined matches)
-    if (metar >= 7) {
-
+//     if (metar == 5) {
+//
 console.log("\n")
 console.log(m)
 console.log(regex)
-}
+// }
 
     if (!(m && m.some(val => val !== undefined && val !== ""))) continue
     //update prevIndex for next round
@@ -143,6 +143,10 @@ console.log(regex)
     //update 'match' property in parsedMetar while using parser functions
     for (let item in m) {
       if (m[item] !== undefined && m[item] !== "") {
+        // console.log("\n")
+        // console.log(m[item])
+        // console.log(item)
+        // console.log(parsedMetar[metar]["parser"])
         let parserFunction = parsedMetar[metar]["parser"][item]
         let data = parserFunction === null ? m[item] : parserFunction(m[item])
         parsedMetar[metar]["match"].push({
@@ -176,7 +180,7 @@ function parseAirportCode(icaoCode) {
   let airportName = airportCodes.reduce((a, v) => {
     return v.code === icaoCode ? v.name : a
   }, icaoCode)
-  return `${icaoCode} ${airportName !== icaoCode ? '(' + airportName + ')' : "" }`
+  return `${icaoCode} ${airportName !== icaoCode ? '(' + airportName + ')' : "(Unknown Airport Code)" }`
 }
 
 function parseAltimeter(data) {
@@ -186,12 +190,23 @@ function parseAltimeter(data) {
 
 function addDegrees(temperature) {
   //Add degree symbol and remove superfluous 0s
+  if (temperature === "VRB") {
+    //it's a string...
+    return "Variable"
+  }
   return parseInt(temperature.toString().replace("M", "-")) + "°"
 }
 
-function addKnots(data) {
+function addSpeed(data) {
   // Add knots symbol
-  return parseInt(data).toString() + " kts";
+  data = data.replace("G", "")
+  //Look for units
+  if (data.includes("KT")) {
+    return parseInt(data).toString() + " knots";
+  } else if (data.includes("MPS")) {
+    return parseInt(data).toString() + " m/sec";
+  }
+  return parseInt(data).toString()
 }
 
 function ordinal(i) {
@@ -259,30 +274,84 @@ function humanizeTime(data) {
 
 function addDistance(data) {
   //add NM distance units
-  return data + " nm"
+  if (data.includes("FT")) {
+    return data.replace("FT", "") + " feet"
+  }
+  if (data.length === 4) {
+      return data + " meters"
+  }
+  return data.replace("SM", " Statuate Miles")
 }
 
 function addTrend(data) {
-  return data
+  const keys = {D: "Decreasing", U: "Increasing", N: "Not changing"}
+  let rightChar = data.slice(data.length - 1);
+  if (rightChar in keys) return keys[rightChar]
+  return `Unknown trend ${data}`
 }
 
+function parseRunway(data) {
+  data = data.replace("R", "Runway ")
+
+  const dirs = {"R": "Right", "C": "Center", "L": "Left"}
+  let direction = data.slice(data.length - 1)
+  if (direction in dirs) {
+    data = data.replace(direction, ` ${dirs[direction]}`)
+  }
+  return data
+}
 function parseWeatherDescriptions(data) {
-  //remove any whitespace
-  data = data.trim()
-  console.log(data)
+  //remove whitespace
+  let localData = data.trim()
+
+  //Check for complex Phenomena
+  const complexPhenomena = {"+FC": "Tornado or Waterspout", "+DS": "Duststorm with 5/16 SM Visibility", "+SS": "Sandstorm with 5/16 SM Visibility"}
+  if (localData in complexPhenomena) {
+    return `${data.trim()} - ${complexPhenomena[localData]}`
+  }
+
   // look for quantifier
   const quantifiers = {"+": "Heavy", "-": "Light", "VC": "In the vicinity"}
-  //will hold current quantifier
-  let dataQuantifier
+  let dataQuantifier = ""
   Object.keys(quantifiers).forEach(quant => {
-    if (data.includes(quant)) {
+    if (localData.slice(0, 1) == quant || localData.slice(0, 2) == quant) {
       dataQuantifier = quantifiers[quant]
-      data = data.replace(quant, "")
+      localData = localData.replace(quant, "")
     }
   })
 
-  return data
+  //now look for description
+  const dict = { MI: "Shallow", BC: "Patches", PR: "Partial", DR: "Drifting", BL: "Blowing", SH: "Showers", TS: "Thunderstorm", FZ: "Freezing",
+    DZ: "Drizzle", RA: "Rain", SN: "Snow", SG: "Snow Grains", IC: "Ice Crystals", PL: "Ice Pellets", GR: "Hail", GS: "Snow Pellets",
+    UP: "Unknown Precipitation", BR: "Mist", FG: "Fog", FU: "Smoke", VA: "Volcanic Ash", DU: "Dust", SA: "Sand", HZ: "Haze", PO: "Dust Devils",
+    SQ: "Squalls", FC: "Funnel Cloud", SS: "Sandstorm", DS: "Duststorm"
+  }
+  let index = 0
+  let description = []
+  while (index < localData.length) {
+    let currentSlice = localData.slice(index, index + 2)
+    if (currentSlice in dict) {
+      description.push(dict[currentSlice])
+    }
+    index += 2
+  }
+  return "null";
+
+  if (localData in dict) {
+    return `${data.trim()} - ${dataQuantifier} ${dict[localData]}`
+  }
+  //Unknown so return error
+  return `${data.trim()} - ${dataQuantifier} <span class="error">${localData}</span>`
 }
+
+function parseCorrection(data) {
+  //AAC ==> "AA third correction"
+  data = data.trim()
+
+  let lastLetter = data.toUpperCase().charCodeAt(data.length -1) - 64;
+  return `Update ${data.slice(0, 2)} - ${ordinal(lastLetter)} correction (${data.slice(-1)})`
+}
+
 function parseClouds(data) {
   return data
 }
