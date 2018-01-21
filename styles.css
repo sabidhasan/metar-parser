@@ -12,12 +12,13 @@ html, body {
   box-sizing: inherit;
 }
 .wrap {
-  margin: 0 auto;
+  margin: 2rem auto;
   background: gold;
   width: 60%;
   min-height: 100%;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 0 0px 9px rgba(0, 0, 0, 0.1);
 }
 header {
   /* Make header occupy full width */
