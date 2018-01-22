@@ -6,13 +6,15 @@ html, body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Lato'
+  font-family: 'Lato';
+  background: darkgray;
 }
 *, *:before, *:after {
   box-sizing: inherit;
 }
 .wrap {
   margin: 2rem auto;
+  border-radius: 2px;
   background: gold;
   width: 60%;
   min-height: 100%;
@@ -47,6 +49,7 @@ table {
 }
 td {
   text-align: center;
+  padding: 0.5rem 0;
   width: 50%;
 }
 tr td:nth-child(1) {
@@ -76,13 +79,14 @@ tr td:nth-child(1) {
   transform: translateY(-100%);
 }
 */
-.original {
-  display: none;
-  /* display: block;
-  visibility: hidden;
+.original {display: none;}
+.parsed {
   border: 2px solid gray;
   padding: 0.25rem;
   border-radius: 20px;
-  background: lightgray; */ */
+  background: yellow;
+  display: inline-block;
+  /* display: block;
+  visibility: hidden;
   /* transition: all 0.1s linear; */
 }
