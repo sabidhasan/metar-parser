@@ -47,7 +47,7 @@ function decode_metar(e) {
       },
       { name: "Prevailing Visibility",
         repeatSearch: false,
-        pattern: /(\d{1,4}(?:[/]\d{1,4}SM)?)\b/,
+        pattern: /(\d{1,4}(?:[/]\d{1,4})?(?:SM)?) /,
         meanings: {0: "Prevailing Visibility"},
         parser: {0: addDistance},
         match: []
@@ -59,36 +59,36 @@ function decode_metar(e) {
         parser: {0: parseRunway, 1: addDistance, 2: addTrend},
         match: []
       },
-
       { name: "Weather",
         repeatSearch: true,
-        pattern: /( (?:[-+]|VC)?[A-Z]{2,6}\b)/,
+        pattern: /( (?!CAVOK)(?:[-+]|VC)?[A-Z]{2,6}\b)/,
         meanings: {0: "Descriptor"},
         parser: {0: parseWeatherDescriptions},
         match: []
       },
 
       { name: "Clouds",
-      repeatSearch: false,
-        pattern: /(CAVOK)|(( ?(SKC|FEW|SCT|BKN|OVC|VV)(\d{3}))*)/,
-        meanings: {1: "Ceiling and Visibility OK", 2: "Clouds"},
-        parser: {1: null, 2: parseClouds},
-        match: []
-      },
-      { name: "Vertical Visibility",
-      repeatSearch: false,
-        pattern: /VV(\d{3})/g,
-        meanings: {1: "Vertical Visibility"},
-        parser: {1: null},
+        repeatSearch: true,
+        pattern: /((?:CAVOK)|(?:[ ]?(?:SKC|FEW|SCT|BKN|OVC|VV)\d{3}))/,
+        meanings: {0: "Clouds"},
+        parser: {0: parseClouds},
         match: []
       },
       { name: "Temperature",
-      repeatSearch: false,
+        repeatSearch: false,
         pattern: /\b(M?\d{1,2})\/(M?\d{1,2})\b/,
         meanings: {0: "Temperature", 1: "Dew Point"},
         parser: {0: addDegrees, 1: addDegrees},
         match: []
       },
+
+
+
+
+
+
+
+
       { name: "Altimeter Setting",
       repeatSearch: false,
         pattern: /([AQ]\d{4})/,
@@ -121,7 +121,9 @@ function decode_metar(e) {
       let regex = parsedMetar[metar].pattern
       //Find first instance of regex - we only care for the first one, starting from string
       m = regex.exec(mainMetarText.slice(prevIndex))
-
+console.log("\n\n")
+console.log(m)
+console.log(regex)
       //check for invalid match (there is no ""/undefined matches)
       if (!(m && m.some(val => val !== undefined && val !== ""))) break
 
@@ -134,12 +136,16 @@ function decode_metar(e) {
       for (let item in m) {
         if (m[item] !== undefined && m[item] !== "") {
           let parserFunction = parsedMetar[metar]["parser"][item]
+console.log(parsedMetar[metar]["parser"])
+console.log(item)
+
           let data = parserFunction === null ? m[item] : parserFunction(m[item])
           parsedMetar[metar]["match"].push({
             data: data,
             meaning: parsedMetar[metar]["meanings"][item],
             originalText: fullMatch
           })
+console.log(parsedMetar[metar]["match"])
         }
       }
     } while (parsedMetar[metar].repeatSearch === true)
@@ -264,24 +270,21 @@ function humanizeTime(data) {
 
 function addDistance(data) {
   //add NM distance units
-  if (data.includes("FT")) {
-    return data.replace("FT", "") + " feet"
-  }
-  if (data.length === 4) {
-      return data + " meters"
-  }
-  return data.replace("SM", " Statuate Miles")
+  data = data.toUpperCase()
+  if (data.includes("FT")) return data.replace("FT", "") + " feet"
+  if (data.length === 4) return data + " meter(s)";
+  return data.replace("SM", " statuate mile(s)");
 }
 
 function addTrend(data) {
   const keys = {D: "Decreasing", U: "Increasing", N: "Not changing"}
-  let rightChar = data.slice(data.length - 1);
+  let rightChar = data.toUpperCase().slice(data.length - 1);
   if (rightChar in keys) return keys[rightChar]
   return `Unknown trend ${data}`
 }
 
 function parseRunway(data) {
-  data = data.replace("R", "Runway ")
+  data = data.toUpperCase().replace("R", "Runway ")
 
   const dirs = {"R": "Right", "C": "Center", "L": "Left"}
   let direction = data.slice(data.length - 1)
@@ -293,7 +296,7 @@ function parseRunway(data) {
 
 function parseWeatherDescriptions(data) {
   //remove whitespace
-  let localData = data.trim()
+  let localData = data.trim().toUpperCase()
 
   //Check for complex Phenomena
   const complexPhenomena = {"+FC": "Tornado or Waterspout", "+DS": "Duststorm with 5/16 SM Visibility", "+SS": "Sandstorm with 5/16 SM Visibility"}
@@ -335,24 +338,33 @@ function parseWeatherDescriptions(data) {
 //
 
   return description.join(" / ");
-  //
-  // if (localData in dict) {
-  //   return `${data.trim()} - ${dataQuantifier} ${dict[localData]}`
-  // }
-  // //Unknown so return error
-  // return `${data.trim()} - ${dataQuantifier} <span class="error">${localData}</span>`
 }
 
 function parseCorrection(data) {
   //AAC ==> "AA third correction"
-  data = data.trim()
+  data = data.trim().toUpperCase();
 
-  let lastLetter = data.toUpperCase().charCodeAt(data.length -1) - 64;
+  let lastLetter = data.charCodeAt(data.length -1) - 64;
   return `Update ${data.slice(0, 2)} - ${ordinal(lastLetter)} correction (${data.slice(-1)})`
 }
 
 function parseClouds(data) {
-  return data
+  data = data.trim().toUpperCase();
+
+  if (data === "CAVOK") return "Ceiling and Visibility OK";
+
+  //parse cloud Data
+  const dict = {"SKC": "Sky Clear (Human generated report)",
+    "CLR": "No clouds below 12000 (US) 25000 (Can)", "FEW": "Few Clouds (1–2 oktas)",
+    "SCT": "Scattered (3–4 oktas)", "BKN": "Broken (5-7 oktas)", "OVC": "Overcast (8 oktas)",
+    "VV": "Clouds not visible"
+  }
+
+  for (let cloud in dict) {
+
+    if (data.includes(cloud)) return dict[cloud] + " at " + parseInt(data.slice(cloud.length, 10)) * 1000 + " feet";
+  }
+  return `<span class="error">${data}</span>`;
 }
 
 //REMARKS
