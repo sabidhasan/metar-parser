@@ -83,7 +83,16 @@ function addTrend(data) {
 
 function parseAltimeter(data) {
   //parse QNH data
-  return data.replace("Q", "QNH ").replace("A", "A ")
+  const firstLetter = data.charAt(0);
+  const altimeterUnits = {"Q": {"name": "QNH", "units": "hPa"}, "A": {"name": "Altimeter", "units": "mmHg"}}
+
+  if (firstLetter in altimeterUnits) {
+    let value = parseInt(data.slice(1)).toPrecision(4);
+    if (firstLetter === "A") value /= 100;
+
+    return `${altimeterUnits[firstLetter].name} ${value} ${altimeterUnits[firstLetter].units}`
+  }
+  return `<span class="error">${data}</span>`
 }
 
 
@@ -94,7 +103,7 @@ function addDegrees(value) {
   if (value === "VRB") return "Variable"
 
   //Determine degrees for weather vs degrees for Direction
-  let units = value.length === 3 ? "" : " C";
+  let units = value.length === 3 && !(value.toString().includes("M")) ? "" : " C";
   return parseInt(value.toString().replace("M", "-")) + "°" + units
 }
 
