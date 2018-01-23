@@ -51,6 +51,7 @@ td {
   text-align: center;
   padding: 0.5rem 0;
   width: 50%;
+  overflow: hidden;
 }
 tr td:nth-child(1) {
   text-align: left;
@@ -79,14 +80,35 @@ tr td:nth-child(1) {
   transform: translateY(-100%);
 }
 */
-.original {display: none;}
+td:hover .original {
+  display: block;
+  transform: translateY(-50%);
+}
+td:hover .parsed {
+  transform: translateY(-200%);
+  position: relative;
+}
+.original {
+  display: none;
+  border-left: 10px solid gray;
+  padding: 0.25rem;
+  transition: all 0.2s linear;
+}
+.original::before {
+  content: "\"";
+  font-weight: bold;
+  font-size: 1.5rem;
+  font-family: times;
+  position: relative;
+  left: -10px;
+  top: -10px;
+}
 .parsed {
   border: 2px solid gray;
   padding: 0.25rem;
-  border-radius: 20px;
+  border-radius: 5px;
   background: yellow;
-  display: inline-block;
   /* display: block;
-  visibility: hidden;
-  /* transition: all 0.1s linear; */
+  visibility: hidden; */
+  transition: all 0.2s linear;
 }
