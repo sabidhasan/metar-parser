@@ -12,9 +12,9 @@ function decode_metar(e) {
   var parsedMetar = [
       { name: "Metar Type",
         repeatSearch: false,
-        pattern: /(METAR)|(SPECI)/,
-        meanings: {0: "METAR", 1: "SPECIAL"},
-        parser: {0: null, 1: null},
+        pattern: /(METAR)|(SPECI)|(TREND)/,
+        meanings: {0: "METAR", 1: "SPECIAL", 2: "TREND"},
+        parser: {0: null, 1: null, 2: null},
         match: []
       },
       { name: "Airport Code",
@@ -33,7 +33,7 @@ function decode_metar(e) {
       },
       { name: "Wind",
         repeatSearch: false,
-        pattern: /(\d{3}|VRB)(\d{2}(?:G))?(\d{2}(?:KT|MPS))/,   //((\d{3})|(VRB))(\d{1,2})G?(\d{1,2})KT/g,
+        pattern: /(\d{3}|VRB)P?(\d{2}(?:G))?(\d{2}(?:KT|MPS))/,   //((\d{3})|(VRB))(\d{1,2})G?(\d{1,2})KT/g,
         meanings: {0: "Wind Direction", 1: "Wind Speed/Gust", 2: "Wind Speed/Gust"},
         parser: {0: addDegrees, 1: addSpeed, 2: addSpeed},
         match: []
@@ -54,24 +54,30 @@ function decode_metar(e) {
       },
       { name: "Runway Visibility",
         repeatSearch: true,
-        pattern: /(R\d{1,2}[CLR]?)[/]P?(\d{3,4}(?:FT)?)([/]?[DUN])?/,
+        pattern: /(R\d{1,2}[CLR]?)[/](?:P|M)?(\d{3,4}(?:FT)?)([/]?[DUN])?/,
         meanings: {0: "Runway", 1: "Visual Range", 2: "Trending"},
         parser: {0: parseRunway, 1: addDistance, 2: addTrend},
         match: []
       },
       { name: "Weather",
         repeatSearch: true,
-        pattern: /( (?!CAVOK)(?:[-+]|VC)?[A-Z]{2,6}\b)/,
+        pattern: /( (?!CAVOK|NOSIG)(?:[-+]|VC)?(?!RE)(?:[A-Z]{2}|[A-Z]{4}|[A-Z]{6}|[A-Z]{8})\b)/,
         meanings: {0: "Descriptor"},
         parser: {0: parseWeatherDescriptions},
         match: []
       },
-
       { name: "Clouds",
         repeatSearch: true,
-        pattern: /((?:CAVOK)|(?:[ ]?(?:SKC|FEW|SCT|BKN|OVC|VV)\d{3}))/,
+        pattern: /((?:CAVOK)|(?:[ ]?(?:SKC|NSC|FEW|SCT|BKN|OVC)\d{3}))/,
         meanings: {0: "Clouds"},
         parser: {0: parseClouds},
+        match: []
+      },
+      { name: "Vertical Visibility",
+        repeatSearch: false,
+        pattern: /(?:VV)([0-9/]{3})/,
+        meanings: {0: "Vertical Visibility"},
+        parser: {0: parseVisibility},
         match: []
       },
       { name: "Temperature",
@@ -88,21 +94,28 @@ function decode_metar(e) {
         parser: {0: parseAltimeter},
         match: []
       },
-
-
-
-
-
-
-
-
-      { name: "Recent Weather",
-      repeatSearch: false,
-        pattern: /RE([A-Z]{2,6}?)/,
-        meanings: {1: "Descriptor", 2: "Weather Phenomenon"},
-        parser: {1: parseWeatherDescriptions, 2: parseWeatherDescriptions},
+      { name: "Trend",
+        repeatSearch: false,
+        pattern: /(NOSIG|BECMG|TEMPO)([ ]FM\d{4})?([ ]TL\d{4})?([ ]AT\d{4})?\b/,
+        meanings: {0: "Trend", 1: "Active From", 2: "Active Till", 3: "Issued At"},
+        parser: {0: parseNOSIG, 1: parseNOSIG, 2: parseNOSIG, 3: parseNOSIG},
         match: []
       },
+      { name: "Recent Weather",
+        repeatSearch: true,
+        pattern: /(RE(?:[A-Z]{2,6}))\b/,
+        meanings: {0: "Recent Weather Phenomenon"},
+        parser: {0: parseWeatherDescriptions},
+        match: []
+      },
+
+
+
+
+
+
+
+
       { name: "Windshear",
       repeatSearch: false,
         pattern: /WS ((RWY\d{2})|(ALLRWY))/,
@@ -126,6 +139,9 @@ console.log(m)
 console.log(regex)
       //check for invalid match (there is no ""/undefined matches)
       if (!(m && m.some(val => val !== undefined && val !== ""))) break
+      //Check if current match is too far into string (this is for recent weatehr - which
+      // causes regex to match near the end of the metar, bypassing everything)
+    //  if ((m.index + m[0].length) > 30) break
 
       //update prevIndex for next search (this is the "current" position in string)
       prevIndex += m.index + m[0].length
@@ -136,16 +152,12 @@ console.log(regex)
       for (let item in m) {
         if (m[item] !== undefined && m[item] !== "") {
           let parserFunction = parsedMetar[metar]["parser"][item]
-console.log(parsedMetar[metar]["parser"])
-console.log(item)
-
           let data = parserFunction === null ? m[item] : parserFunction(m[item])
           parsedMetar[metar]["match"].push({
             data: data,
             meaning: parsedMetar[metar]["meanings"][item],
             originalText: fullMatch
           })
-console.log(parsedMetar[metar]["match"])
         }
       }
     } while (parsedMetar[metar].repeatSearch === true)
