@@ -21,6 +21,15 @@ function parseCorrection(data) {
 
 
 
+function parseVisibility(data) {
+  //parse vertical visibility
+  if (data === "///") return "Vertical visibility not measured";
+  return (parseInt(data) * 100) + " feet";
+}
+
+
+
+
 function parseClouds(data) {
   data = data.trim().toUpperCase();
 
@@ -30,7 +39,7 @@ function parseClouds(data) {
   const dict = {"SKC": "Sky Clear (Human generated report)",
     "CLR": "No clouds below 12000 (US) 25000 (Can)", "FEW": "Few Clouds (1–2 oktas)",
     "SCT": "Scattered (3–4 oktas)", "BKN": "Broken (5-7 oktas)", "OVC": "Overcast (8 oktas)",
-    "VV": "Clouds not visible"
+    "NSC": "No significant clouds"
   }
 
   for (let cloud in dict) {
@@ -51,7 +60,9 @@ function addDistance(data) {
   //check for statuate miles
   if (data.includes("SM")) return `${data.replace("SM", "")} statuate miles`;
   //Assume its in meters
-  return data + " meter(s)";
+  if (data === "0000") return "Less than 50 meters"
+  if (data === "9999") return "More than 10 km visibility"
+  return data + " meters";
 }
 
 
@@ -137,6 +148,23 @@ function ordinal(i) {
 
 
 
+function parseNOSIG(data) {
+  data = data.trim().toUpperCase()
+  const defs = {BECMG: "Becoming", TEMPO: "Temporary", FM: "From",
+    TL: "Until", AT: "At", NSW: "No significant weather",
+    TEMPO: "No significant change expected within the next two hours"
+  }
+  console.log("functions")
+  console.log(data)
+  for (def in defs) {
+    if (data.includes(def)) return data.replace(def, defs[def] + " ")
+  }
+  return `<span class="error">${data}</span>`
+}
+
+
+
+
 function humanizeTime(data) {
   //Return humanized form of time data
   const now = new Date;
@@ -186,8 +214,8 @@ function humanizeTime(data) {
 
 
 function parseWeatherDescriptions(data) {
-  //remove whitespace
-  let localData = data.trim().toUpperCase()
+  //remove whitespace and "recent weather"
+  let localData = data.trim().toUpperCase().replace("RE", "")
 
   //Check for complex Phenomena
   const complexPhenomena = {"+FC": "Tornado or Waterspout", "+DS": "Duststorm with 5/16 SM Visibility", "+SS": "Sandstorm with 5/16 SM Visibility"}
@@ -222,7 +250,7 @@ function parseWeatherDescriptions(data) {
       //invalid description
       currentDescription += `<span class="error">${currentSlice}</span>`;
     }
-    if (currentDescription) description.push(currentDescription.trim())
+    description.push(currentDescription.trim())
     index += 2;
   }
   return description.join(" / ");
