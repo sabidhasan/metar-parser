@@ -31,9 +31,20 @@ function parseVisibility(data) {
 
 
 function parseClouds(data) {
-  data = data.trim().toUpperCase();
+  var localData = data.trim().toUpperCase();
 
-  if (data === "CAVOK") return "Ceiling and Visibility OK";
+  if (localData === "CAVOK") return "Ceiling and Visibility OK";
+
+  //Look for manual clouds
+  const manualClouds = {"CB": "Cumulonimbus", "TCU": "Towering Cumulonimbus"}
+  var cloudType = "";
+
+  for (let cloud in manualClouds) {
+    if (localData.slice(localData.length - cloud.length) == cloud) {
+      localData = localData.replace(cloud, "");
+      cloudType = `type ${manualClouds[cloud]}`;
+    }
+  }
 
   //parse cloud Data
   const dict = {"SKC": "Sky Clear (Human generated report)",
@@ -41,10 +52,8 @@ function parseClouds(data) {
     "SCT": "Scattered (3–4 oktas)", "BKN": "Broken (5-7 oktas)", "OVC": "Overcast (8 oktas)",
     "NSC": "No significant clouds"
   }
-
   for (let cloud in dict) {
-
-    if (data.includes(cloud)) return dict[cloud] + " at " + parseInt(data.slice(cloud.length, 10)) * 100 + " feet";
+    if (localData.includes(cloud)) return dict[cloud] + " at " + parseInt(localData.slice(cloud.length)) * 100 + " feet " + cloudType;
   }
   return `<span class="error">${data}</span>`;
 }
@@ -253,5 +262,5 @@ function parseWeatherDescriptions(data) {
     }
     index += 2;
   }
-``  return description.join(" / ");
+  return description.join(" / ");
 }

@@ -47,7 +47,7 @@ function decode_metar(e) {
       },
       { name: "Prevailing Visibility",
         repeatSearch: false,
-        pattern: /(\d{1,4}(?:[/]\d{1,4})?(?:SM)?) /,
+        pattern: /(M?\d{1,4}(?:[/]\d{1,4})?(?:SM)?) /,
         meanings: {0: "Prevailing Visibility"},
         parser: {0: addDistance},
         match: []
@@ -55,7 +55,7 @@ function decode_metar(e) {
       { name: "Runway Visibility",
         repeatSearch: true,
         pattern: /(R\d{1,2}[CLR]?)[/](?:P|M)?(\d{3,4}(?:FT)?)([/]?[DUN])?/,
-        meanings: {0: "Runway", 1: "Visual Range", 2: "Trending"},
+        meanings: {0: "Runway", 1: "Visual Range", 2: "Trend"},
         parser: {0: parseRunway, 1: addDistance, 2: addTrend},
         match: []
       },
@@ -68,21 +68,21 @@ function decode_metar(e) {
       },
       { name: "Clouds",
         repeatSearch: true,
-        pattern: /((?:CAVOK)|(?:[ ]?(?:SKC|NSC|FEW|SCT|BKN|OVC)\d{3}))/,
+        pattern: /((?:CAVOK)|(?:[ ]?(?:SKC|NSC|FEW|SCT|BKN|OVC)\d{3}(?:CB|TCU)?))/,
         meanings: {0: "Clouds"},
         parser: {0: parseClouds},
         match: []
       },
       { name: "Vertical Visibility",
         repeatSearch: false,
-        pattern: /(?:VV)([0-9/]{3})/,
+        pattern: /(?:VV)([0-9/]{3})\b/,
         meanings: {0: "Vertical Visibility"},
         parser: {0: parseVisibility},
         match: []
       },
       { name: "Temperature",
         repeatSearch: false,
-        pattern: /\b(M?\d{1,2})\/(M?\d{1,2})\b/,
+        pattern: /\b(M?\d{1,2})[/](M?\d{1,2})?\b/,
         meanings: {0: "Temperature", 1: "Dew Point"},
         parser: {0: addDegrees, 1: addDegrees},
         match: []
@@ -92,13 +92,6 @@ function decode_metar(e) {
         pattern: /([AQ]\d{4})\b/,
         meanings: {0: "Altimeter"},
         parser: {0: parseAltimeter},
-        match: []
-      },
-      { name: "Trend",
-        repeatSearch: false,
-        pattern: /(NOSIG|BECMG|TEMPO)([ ]FM\d{4})?([ ]TL\d{4})?([ ]AT\d{4})?\b/,
-        meanings: {0: "Trend", 1: "Active From", 2: "Active Till", 3: "Issued At"},
-        parser: {0: parseNOSIG, 1: parseNOSIG, 2: parseNOSIG, 3: parseNOSIG},
         match: []
       },
       { name: "Recent Weather",
@@ -118,11 +111,19 @@ function decode_metar(e) {
 
       { name: "Windshear",
       repeatSearch: false,
-        pattern: /WS ((RWY\d{2})|(ALLRWY))/,
-        meanings: {1: "Runway Affected"},
-        parser: {1: null},
+        pattern: /WS[ ]?(\d{3})[/](\d{3})(\d{2}KT)/,
+        meanings: {0: "Altitude", 1: "Wind Shear Direction", 2: "Wind Shear Speed"},
+        parser: {0: parseVisibility, 1: addDegrees, 2: addSpeed},
         match: []
-      }
+      },
+      { name: "Trend",
+        repeatSearch: false,
+        pattern: /(NOSIG|BECMG|TEMPO)([ ]FM\d{4})?([ ]TL\d{4})?([ ]AT\d{4})?\b/,
+        meanings: {0: "Trend", 1: "Active From", 2: "Active Till", 3: "Issued At"},
+        parser: {0: parseNOSIG, 1: parseNOSIG, 2: parseNOSIG, 3: parseNOSIG},
+        match: []
+      },
+
   ]
 
   //where in string to start looking from
