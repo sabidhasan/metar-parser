@@ -54,7 +54,9 @@ function parseClouds(data) {
 
 function addDistance(data) {
   //add NM distance units
-  data = data.toUpperCase()
+  data = data.toUpperCase().trim()
+  //check for "less than"
+  if (data.charAt(0) == "M") data = data.replace("M", "Less than ");
   //Check for feet
   if (data.includes("FT")) return `${parseInt(data.replace("FT", ""))} feet`;
   //check for statuate miles
@@ -154,8 +156,6 @@ function parseNOSIG(data) {
     TL: "Until", AT: "At", NSW: "No significant weather",
     TEMPO: "No significant change expected within the next two hours"
   }
-  console.log("functions")
-  console.log(data)
   for (def in defs) {
     if (data.includes(def)) return data.replace(def, defs[def] + " ")
   }
@@ -232,26 +232,26 @@ function parseWeatherDescriptions(data) {
   let index = 0
   //description holds the entire array
   let description = []
+  //check for +, -, or VC (quantifiers)
+  if (localData.charAt(index) in quantifiers) {
+    description.push(quantifiers[localData.charAt(index)]);
+    index += 1;
+  } else if (localData.slice(0, 2) in quantifiers) {
+    description.push(quantifiers[localData.slice(0, 2)]);
+    index += 2;
+  }
   //loop through text
   while (index < localData.length) {
-    //holds current description (value)
-    let currentDescription = ""
-    //check for +, -, or VC (quantifiers)
-    if (localData.charAt(index) in quantifiers) {
-      currentDescription += quantifiers[localData.charAt(index)] + " ";
-      index += 1;
-    }
     //Look at next two letters to see if they are in dict
     let currentSlice = localData.slice(index, index + 2)
     //look for description
     if (currentSlice in dict) {
-      currentDescription += dict[currentSlice] + " "
+      description.push(dict[currentSlice])
     } else {
       //invalid description
-      currentDescription += `<span class="error">${currentSlice}</span>`;
+      description.push(`<span class="error">${currentSlice}</span>`);
     }
-    description.push(currentDescription.trim())
     index += 2;
   }
-  return description.join(" / ");
+``  return description.join(" / ");
 }
