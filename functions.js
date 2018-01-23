@@ -255,3 +255,67 @@ function parseWeatherDescriptions(data) {
   }
   return description.join(" / ");
 }
+
+
+
+
+function parseRSGRunway(data) {
+  //Parse Runway state group data
+  let num = parseInt(data.trim())
+  if (num === 88) return `All runways`;
+  if (num === 99) return `no new information`;
+  if (num <= 36) return `Runway ${data} or ${data}L`;
+  return `Runway ${num - 50}R`
+}
+
+
+
+
+function parseRSGRunwayDeposits(data) {
+    data = data.trim()
+    //parse runway deposits
+    if (data in RSGRunwayDepositDict) {
+      return RSGRunwayDepositDict[data]
+    }
+    return `<span class="error>${data}</span>`
+}
+
+
+
+
+function parseRSGRunwayContamination(data) {
+  data = data.trim()
+  if (data in RSGRunwayContaminationDict) {
+    return RSGRunwayContaminationDict[data]
+  }
+  return `<span class="error>${data}</span>`
+}
+
+
+
+
+function parseRSGRunwayDepth(data) {
+    data = data.trim()
+
+    if (data in runwayDepthDict) {
+       return runwayDepthDict[data];
+    } else if (parseInt(data) < 90) {
+      return `${data} mm`;
+    } else if (parseInt(data) > 91) {
+      return `${(parseInt(data) - 90) * 5} cm`
+    }
+    return `<span class="error">${data}</span>`
+}
+
+
+
+
+function parseRSGRunwayBraking(data) {
+  data = data.trim()
+
+  if (data in brakingDict) {
+    return brakingDict[data]
+  } else {
+    return `Friction coefficient ${parseInt(data)}%`
+  }
+}
