@@ -47,13 +47,8 @@ function parseClouds(data) {
   }
 
   //parse cloud Data
-  const dict = {"SKC": "Sky Clear (Human generated report)",
-    "CLR": "No clouds below 12000 (US) 25000 (Can)", "FEW": "Few Clouds (1–2 oktas)",
-    "SCT": "Scattered (3–4 oktas)", "BKN": "Broken (5-7 oktas)", "OVC": "Overcast (8 oktas)",
-    "NSC": "No significant clouds"
-  }
-  for (let cloud in dict) {
-    if (localData.includes(cloud)) return dict[cloud] + " at " + parseInt(localData.slice(cloud.length)) * 100 + " feet " + cloudType;
+  for (let cloud in cloudDict) {
+    if (localData.includes(cloud)) return cloudDict[cloud] + " at " + parseInt(localData.slice(cloud.length)) * 100 + " feet " + cloudType;
   }
   return `<span class="error">${data}</span>`;
 }
@@ -161,12 +156,8 @@ function ordinal(i) {
 
 function parseNOSIG(data) {
   data = data.trim().toUpperCase()
-  const defs = {BECMG: "Becoming", TEMPO: "Temporary", FM: "From",
-    TL: "Until", AT: "At", NSW: "No significant weather",
-    TEMPO: "No significant change expected within the next two hours"
-  }
-  for (def in defs) {
-    if (data.includes(def)) return data.replace(def, defs[def] + " ")
+  for (def in nosigDefs) {
+    if (data.includes(def)) return data.replace(def, nosigDefs[def] + " ")
   }
   return `<span class="error">${data}</span>`
 }
