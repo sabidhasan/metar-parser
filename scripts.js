@@ -38,7 +38,7 @@ function decode_metar(e) {
       },
       { name: "Prevailing Visibility",
         repeatSearch: false,
-        pattern: /(M?\d{1,4}(?:[/]\d{1,4})?(?:SM)?) /,
+        pattern: /(M?\d{1,4}(?:[/]\d{1,4})?(?:SM)?)\b/,
         meanings: {0: "Prevailing Visibility"},
         parser: {0: addDistance},
         match: []
@@ -135,9 +135,9 @@ function decode_metar(e) {
       let regex = parsedMetar[metar].pattern
       //Find first instance of regex - we only care for the first one, starting from string
       m = regex.exec(mainMetarText.slice(prevIndex))
-// console.log("\n\n")
-// console.log(m)
-// console.log(regex)
+console.log("\n\n")
+console.log(m)
+console.log(regex)
       //check for invalid match (there is no ""/undefined matches)
       if (!(m && m.some(val => val !== undefined && val !== ""))) break
 

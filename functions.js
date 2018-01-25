@@ -237,7 +237,7 @@ function parseWeatherDescriptions(data) {
     description.push(quantifiers[localData.charAt(index)]);
     index += 1;
   } else if (localData.slice(0, 2) in quantifiers) {
-    description.push(quantifiers[localData.slice(0, 2)]);
+    description.push(quantifiers[localData.slice(0, 2)] + ":");
     index += 2;
   }
   //loop through text
@@ -253,7 +253,7 @@ function parseWeatherDescriptions(data) {
     }
     index += 2;
   }
-  return description.join(" / ");
+  return description.join(" ");
 }
 
 
