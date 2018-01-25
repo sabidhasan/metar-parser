@@ -121,7 +121,7 @@ function decode_metar(e) {
   ]
 
   const results = document.querySelector(".results")
-  const metar = this.value.split("=")[0].split("RMK")
+  const metar = this.value.split("=")[0].split("RMK ")
 
   let mainMetarText = metar[0]
   const remarks = metar[1] || null
@@ -135,9 +135,9 @@ function decode_metar(e) {
       let regex = parsedMetar[metar].pattern
       //Find first instance of regex - we only care for the first one, starting from string
       m = regex.exec(mainMetarText.slice(prevIndex))
-console.log("\n\n")
-console.log(m)
-console.log(regex)
+// console.log("\n\n")
+// console.log(m)
+// console.log(regex)
       //check for invalid match (there is no ""/undefined matches)
       if (!(m && m.some(val => val !== undefined && val !== ""))) break
 
@@ -165,16 +165,25 @@ console.log(regex)
   parsedMetar.forEach(val => {
     //if this needs to be written
     if (val.match.length > 1) {
-      ret += `<h1>${val.name}</h1>`
-      ret += `<table>`
+      ret += `<h1>${val.name}</h1><table>`
       for (let item in val.match) {
         ret += `<tr><td>${val["match"][item]["meaning"]}</td><td><div class="parsed">${val["match"][item]["data"]}</div><div class="original">${val["match"][item]["originalText"]}</div></td></tr>`
       }
       ret += `</table>`
-      results.innerHTML = ret
     } else if (val.match.length === 1) {
       ret += `<table><tr><td><h1>${val.name}</h1></td><td><div class="parsed">${val["match"][0]["data"]}</div><div class="original">${val["match"][0]["originalText"]}</div></td></tr></table>`
-      results.innerHTML = ret
     }
-  })
+  });
+
+  //Write remarks
+  if (remarks) {
+    let parsedRemarks = remarks.split(" ").map(parseRemark)
+
+    ret += `<h1>Remarks</h1><table>`;
+    parsedRemarks.forEach((val, idx) => {
+        ret += `<tr><td> </td><td><div class="parsed">${val}</div><div class="original">${remarks.split(" ")[idx]}</div></td></tr>`
+    });
+    ret += `</table>`;
+  }
+  results.innerHTML = ret
 }
