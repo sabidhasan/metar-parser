@@ -319,3 +319,31 @@ function parseRSGRunwayBraking(data) {
     return `Friction coefficient ${parseInt(data)}%`
   }
 }
+
+
+
+
+function parseRemark(data) {
+  //Parse remarks
+  //Check to see if its in dictionary entirely
+  if (data in remarksDict) return remarksDict[data]
+
+  //make an array of the word
+  let arr = data.split("")
+  //create dict keys sorted by length (we want longer things to match first)
+  const keys = Object.keys(remarksDict).sort((a, b) => b.length > a.length ? 1 : -1);
+  //Search more thoroughly
+  for (remark in keys) {
+    //replace as needed
+    let currIndex = data.indexOf(keys[remark])
+    if (currIndex !== -1 && arr[currIndex] === data.charAt(currIndex)) {
+      //update first position
+      arr[currIndex] = remarksDict[keys[remark]]
+      //update all other positions
+      for (let i = currIndex + 1; i < currIndex + keys[remark].length; i++) {
+        arr[i] = "";
+      }
+    }
+  }
+  return arr.join(" ")
+}
