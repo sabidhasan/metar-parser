@@ -1,5 +1,4 @@
 function decode_metar(e) {
-  console.clear()
   let parsedMetar = [
       { name: "Metar Type",
         repeatSearch: false,
@@ -121,7 +120,7 @@ function decode_metar(e) {
   ]
 
   const results = document.querySelector(".results")
-  const metar = this.value.split("=")[0].split("RMK ")
+  const metar = stripDoubleSpaces(this.value).split("=")[0].split("RMK ")
 
   let mainMetarText = metar[0]
   const remarks = metar[1] || null
@@ -135,9 +134,6 @@ function decode_metar(e) {
       let regex = parsedMetar[metar].pattern
       //Find first instance of regex - we only care for the first one, starting from string
       m = regex.exec(mainMetarText.slice(prevIndex))
-console.log("\n\n")
-console.log(m)
-console.log(regex)
       //check for invalid match (there is no ""/undefined matches)
       if (!(m && m.some(val => val !== undefined && val !== ""))) break
 

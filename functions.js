@@ -347,3 +347,8 @@ function parseRemark(data) {
   }
   return arr.join(" ")
 }
+
+
+function stripDoubleSpaces(text) {
+  return text.replace(/[ ]{2,}/g, ' ')
+}
