@@ -7,7 +7,7 @@ html, body {
   padding: 0;
   box-sizing: border-box;
   font-family: 'Lato';
-  background: darkgray;
+  background: #E9C893;
 }
 *, *:before, *:after {
   box-sizing: inherit;
@@ -15,24 +15,29 @@ html, body {
 .wrap {
   margin: 2rem auto;
   border-radius: 2px;
-  background: gold;
+  background: #325e46;
   width: 60%;
   min-height: 100%;
   display: flex;
   flex-direction: column;
   box-shadow: 0 0 0px 9px rgba(0, 0, 0, 0.1);
 }
-h1 {
+h2 {
   display: flex;
   align-items: center;
   justify-content: center;
   text-transform: uppercase;
+  color: #3cc47c;
+  letter-spacing: 0.15rem;
+  font-size: 2.5rem;
+  font-weight: normal;
 }
-h1 img {
+h2 img {
   width: 150px;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 50%;
-  height: 150px;
+  padding: 45px 0;
+  /* height: 150px; */
   margin: 0 1.2rem;
 }
 header {
@@ -44,12 +49,15 @@ input[type=text] {
   font-size: 1.2rem;
   width: 75%;
   padding: 3px;
-  border: 2px solid darkgray;
-  background-color: lightgray;
+  border: 2px solid #3cc47c;
+  background-color: #e9c893;
   outline: none;
 }
 
-table h1 {text-align: left;}
+table h1 {
+  text-align: left;
+  color: #E9C893;
+}
 .results {
   padding: 0.5rem;
   margin-top: 2rem;
@@ -117,10 +125,11 @@ td:hover .parsed {
   top: -10px;
 }
 .parsed {
-  border: 2px solid gray;
+  border: 2px solid #E9C893;
   padding: 0.25rem;
   border-radius: 5px;
-  background: yellow;
+  background: #3cc47c; /*#E9C893;*/
+  color: #325e46;
   /* display: block;
   visibility: hidden; */
   transition: all 0.2s linear;
