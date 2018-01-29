@@ -117,3 +117,45 @@ td:hover .parsed {
   margin: auto;
   transition: all 0.2s linear;
 }
+
+@media screen and (max-width: 850px) {
+  html,body {
+    background-color: #325e46!important;
+  }
+  .wrap {
+    /* remove right/left borders */
+    width: 100%;
+    margin: 0;
+    box-shadow: none;
+  }
+  h2 {
+    /* Move each word onto its own line, and reduce clearance from top */
+    display: block;
+    margin: 0.1rem;
+    font-size: 1.8rem;
+  }
+  h2 img {
+    /* Make logo smaller and on own line */
+    margin: 0 auto;
+    width: 50px;
+    padding: 15px 0;
+    display: block;
+  }
+  input[type=text] {
+    font-size: 1rem;
+  }
+  table h1 {
+    margin: 0.3rem;
+    font-size: 1.3rem;
+  }
+  tr td:nth-child(1) {
+    width: 35%;
+  }
+  tr td:nth-child(2) {
+    width: 65%;
+  }
+  .parsed {
+    font-size: 0.8rem;
+    width: 95%;
+  }
+}
