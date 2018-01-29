@@ -54,7 +54,7 @@ input[type=text] {
   outline: none;
 }
 
-table h1 {
+h1 {
   text-align: left;
   color: #E9C893;
 }
@@ -81,30 +81,40 @@ tr td:nth-child(1) {
 .error {
   color: red;
 }
+.indented {
+  margin: 0.8rem;
+  display: block;
+  color: #e9c893;
+}
 
 
 td:hover .original {
-  display: block;
-  transform: translateY(-50%);
+  /* display: block; */
+  visibility: visible;
+  height: auto;
+  transform: translateY(-90%);
 }
 td:hover .parsed {
   transform: translateY(-200%);
   position: relative;
 }
 .original {
-  display: none;
-  border-left: 10px solid gray;
+  height: 0px;
+  visibility: hidden;
+  border: 2px solid darkgray;
+  outline: 4px solid rgba(0, 0, 0, 0.25);
+  font-weight: bold;
   padding: 0.25rem;
-  transition: all 0.2s linear;
+  transition: all .2s linear;
+  background: lightgray;
+  width: 90%;
+  margin: 0 auto;
 }
-.original::before {
+.original::before, .original::after {
   content: "\"";
   font-weight: bold;
-  font-size: 1.5rem;
   font-family: times;
   position: relative;
-  left: -10px;
-  top: -10px;
 }
 .parsed {
   border: 2px solid #E9C893;
@@ -115,7 +125,8 @@ td:hover .parsed {
   width: 90%;
   font-weight: bold;
   margin: auto;
-  transition: all 0.2s linear;
+  transition: all .2s linear;
+  margin: 0.3rem auto;
 }
 
 @media screen and (max-width: 850px) {
@@ -144,9 +155,9 @@ td:hover .parsed {
   input[type=text] {
     font-size: 1rem;
   }
-  table h1 {
-    margin: 0.3rem;
-    font-size: 1.3rem;
+  h1 {
+    margin: 0.8rem 0;
+    font-size: 1.2rem;
   }
   tr td:nth-child(1) {
     width: 35%;
@@ -157,5 +168,8 @@ td:hover .parsed {
   .parsed {
     font-size: 0.8rem;
     width: 95%;
+  }
+  .indented {
+    font-size: 0.8rem;
   }
 }

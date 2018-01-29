@@ -73,7 +73,7 @@ function decode_metar(e) {
       { name: "Temperature",
         repeatSearch: false,
         pattern: /\b(M?\d{1,2})[/](M?\d{1,2})?\b/,
-        meanings: {0: "Temperature", 1: "Dew Point"},
+        meanings: {0: "Air Temperature", 1: "Dew Point"},
         parser: {0: addDegrees, 1: addDegrees},
         match: []
       },
@@ -163,7 +163,7 @@ function decode_metar(e) {
     if (val.match.length > 1) {
       ret += `<h1>${val.name}</h1><table>`
       for (let item in val.match) {
-        ret += `<tr><td>${val["match"][item]["meaning"]}</td><td><div class="parsed">${val["match"][item]["data"]}</div><div class="original">${val["match"][item]["originalText"]}</div></td></tr>`
+        ret += `<tr><td><span class="indented">${val["match"][item]["meaning"]}</span></td><td><div class="parsed">${val["match"][item]["data"]}</div><div class="original">${val["match"][item]["originalText"]}</div></td></tr>`
       }
       ret += `</table>`
     } else if (val.match.length === 1) {

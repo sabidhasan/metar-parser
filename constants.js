@@ -180,7 +180,9 @@ const remarksDict = {
     "SC"        : "Stratocumulus cloud",
     "AC"        : "altocumulus cloud",
     "OVR"       : "Over",
-    "RDG"       : "Ridge"
+    "RDG"       : "Ridge",
+    "TR"        : "Trace",
+    "SC"        : "Stratocumulus"
 }
 
 const RSGRunwayDepositDict = {
