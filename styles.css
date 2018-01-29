@@ -70,7 +70,7 @@ table {
 }
 td {
   text-align: center;
-  padding: 0.5rem 0;
+  padding: 0;
   width: 50%;
   overflow: hidden;
 }
@@ -83,24 +83,6 @@ tr td:nth-child(1) {
 }
 
 
-/* .parsed {
-  display: inline-block;
-  border: 2px solid gray;
-  padding: 0.25rem;
-  border-radius: 20px;
-  background: lightgray;
-  /* transition: all 0.1s linear; */
-/* }
-.parsed:hover { */
-  /* transform: translateY(-50%); */
-  /* opacity: 0.0; */
-  /* visibility: hidden; */
-/* }
-.parsed:hover ~ div {
-  visibility: visible;
-  transform: translateY(-100%);
-}
-*/
 td:hover .original {
   display: block;
   transform: translateY(-50%);
@@ -126,11 +108,12 @@ td:hover .parsed {
 }
 .parsed {
   border: 2px solid #E9C893;
+  outline: 4px solid rgba(0, 0, 0, 0.25);
   padding: 0.25rem;
-  border-radius: 5px;
   background: #3cc47c; /*#E9C893;*/
   color: #325e46;
-  /* display: block;
-  visibility: hidden; */
+  width: 90%;
+  font-weight: bold;
+  margin: auto;
   transition: all 0.2s linear;
 }
